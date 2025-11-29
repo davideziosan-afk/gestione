@@ -71,7 +71,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         : "bg-background hover:bg-secondary"
                     )}
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
+                    <item.icon className="h-4 w-4 shrink-0" strokeLinecap="round" strokeLinejoin="round" />
                     <span>{item.name}</span>
                   </Link>
                 );
@@ -86,7 +86,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       : "bg-background hover:bg-secondary"
                   )}
                 >
-                  <UserCheck className="h-4 w-4 shrink-0" />
+                  <UserCheck className="h-4 w-4 shrink-0" strokeLinecap="round" strokeLinejoin="round" />
                   <span>approvazioni</span>
                 </Link>
               )}
@@ -95,7 +95,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 onClick={handleLogout}
                 className="flex items-center gap-3 px-4 py-2 text-sm font-medium border border-border transition-colors whitespace-nowrap bg-background hover:bg-secondary"
               >
-                <LogOut className="h-4 w-4 shrink-0" />
+                <LogOut className="h-4 w-4 shrink-0" strokeLinecap="round" strokeLinejoin="round" />
                 <span>esci</span>
               </Button>
             </nav>

@@ -47,14 +47,14 @@ export default function CostiFissi() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Costi Fissi</h2>
-          <p className="text-muted-foreground">Gestisci i costi ricorrenti dello studio</p>
+          <h2 className="text-3xl font-bold tracking-tight">costi fissi</h2>
+          <p className="text-muted-foreground">gestisci i costi ricorrenti dello studio</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
               <Plus className="h-4 w-4 mr-2" />
-              Nuovo Costo Fisso
+              nuovo costo fisso
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -129,19 +129,19 @@ export default function CostiFissi() {
 
       <Tabs defaultValue="costi" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="costi">Costi Fissi</TabsTrigger>
-          <TabsTrigger value="movimenti">Movimenti Generati</TabsTrigger>
+          <TabsTrigger value="costi">costi fissi</TabsTrigger>
+          <TabsTrigger value="movimenti">movimenti generati</TabsTrigger>
         </TabsList>
 
         <TabsContent value="costi" className="space-y-4">
           <div className="border border-border">
             <div className="grid grid-cols-12 gap-4 p-4 font-bold bg-secondary">
-              <div className="col-span-3">Voce</div>
-              <div className="col-span-2">Importo/Mese</div>
-              <div className="col-span-2">Giorno Scad.</div>
-              <div className="col-span-2">Categoria</div>
-              <div className="col-span-2">Note</div>
-              <div className="col-span-1">Azioni</div>
+              <div className="col-span-3">voce</div>
+              <div className="col-span-2">importo/mese</div>
+              <div className="col-span-2">giorno scad.</div>
+              <div className="col-span-2">categoria</div>
+              <div className="col-span-2">note</div>
+              <div className="col-span-1">azioni</div>
             </div>
             {costiFissi?.map((costo) => (
               <div key={costo.id} className="grid grid-cols-12 gap-4 p-4 border-t border-border items-center">

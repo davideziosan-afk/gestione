@@ -122,14 +122,14 @@ export default function CompanyPrice() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Tariffe</h2>
-          <p className="text-muted-foreground">Gestisci le tariffe giornaliere dei ruoli</p>
+          <h2 className="text-3xl font-bold tracking-tight">tariffe</h2>
+          <p className="text-muted-foreground">gestisci le tariffe giornaliere dei ruoli</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
               <Plus className="h-4 w-4 mr-2" />
-              Nuova Tariffa
+              nuova tariffa
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -184,16 +184,16 @@ export default function CompanyPrice() {
       {/* Tariffe Table */}
       <div className="border border-border">
         <div className="grid grid-cols-12 gap-4 p-4 font-bold bg-secondary">
-          <div className="col-span-4">Ruolo</div>
-          <div className="col-span-3">Costo Interno</div>
-          <div className="col-span-3">Billable Rate</div>
-          <div className="col-span-2">Azioni</div>
+          <div className="col-span-4">ruolo</div>
+          <div className="col-span-3">costo interno</div>
+          <div className="col-span-3">billable rate</div>
+          <div className="col-span-2">azioni</div>
         </div>
         {companyPrices?.map((price) => (
           <div key={price.id} className="grid grid-cols-12 gap-4 p-4 border-t border-border items-center">
             <div className="col-span-4 font-medium flex items-center gap-2">
               {price.ruolo}
-              {price.attivo && <Badge variant="outline">Attivo</Badge>}
+              {price.attivo && <Badge variant="outline">attivo</Badge>}
             </div>
             <div className="col-span-3">{formatCurrency(price.prezzo_giornaliero)}/giorno</div>
             <div className="col-span-3">{formatCurrency(price.billable_rate)}/giorno</div>
@@ -232,8 +232,8 @@ export default function CompanyPrice() {
       {/* Simulation */}
       <Card>
         <CardHeader>
-          <CardTitle>Simulazione Costo Progetto</CardTitle>
-          <CardDescription>Calcola il costo interno stimato per un progetto</CardDescription>
+          <CardTitle>simulazione costo progetto</CardTitle>
+          <CardDescription>calcola il costo interno stimato per un progetto</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {companyPrices?.map((price) => (
@@ -263,7 +263,7 @@ export default function CompanyPrice() {
           ))}
           <div className="border-t border-border pt-4">
             <div className="flex items-center justify-between">
-              <p className="text-lg font-bold">Totale Costo Interno Stimato</p>
+              <p className="text-lg font-bold">totale costo interno stimato</p>
               <p className="text-2xl font-bold">{formatCurrency(calcolaCostoProgetto())}</p>
             </div>
           </div>

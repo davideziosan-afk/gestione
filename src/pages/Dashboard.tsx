@@ -141,15 +141,15 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">Panoramica finanziaria dello studio</p>
+        <h2 className="text-3xl font-bold tracking-tight">dashboard</h2>
+        <p className="text-muted-foreground">panoramica finanziaria dello studio</p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cassa Attuale</CardTitle>
+            <CardTitle className="text-sm font-medium">cassa attuale</CardTitle>
             <Euro className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -158,7 +158,7 @@ export default function Dashboard() {
               {cassaAttuale < (settings?.soglia_allerta_cassa || 0) && (
                 <span className="text-destructive flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
-                  Sotto soglia allerta
+                  sotto soglia allerta
                 </span>
               )}
             </p>
@@ -167,34 +167,34 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Entrate YTD</CardTitle>
+            <CardTitle className="text-sm font-medium">entrate ytd</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(entrateEffettive)}</div>
-            <p className="text-xs text-muted-foreground">Incassato dall'inizio anno</p>
+            <p className="text-xs text-muted-foreground">incassato dall'inizio anno</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Uscite YTD</CardTitle>
+            <CardTitle className="text-sm font-medium">uscite ytd</CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(usciteEffettive)}</div>
-            <p className="text-xs text-muted-foreground">Pagato dall'inizio anno</p>
+            <p className="text-xs text-muted-foreground">pagato dall'inizio anno</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Margine YTD</CardTitle>
+            <CardTitle className="text-sm font-medium">margine ytd</CardTitle>
             <Euro className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(entrateEffettive - usciteEffettive)}</div>
-            <p className="text-xs text-muted-foreground">Differenza entrate/uscite</p>
+            <p className="text-xs text-muted-foreground">differenza entrate/uscite</p>
           </CardContent>
         </Card>
       </div>
@@ -203,8 +203,8 @@ export default function Dashboard() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Entrate vs Uscite</CardTitle>
-            <CardDescription>Ultimi 12 mesi (effettivi + previsti)</CardDescription>
+            <CardTitle>entrate vs uscite</CardTitle>
+            <CardDescription>ultimi 12 mesi (effettivi + previsti)</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -220,8 +220,8 @@ export default function Dashboard() {
                   formatter={(value) => formatCurrency(value as number)}
                 />
                 <Legend />
-                <Bar dataKey="entrateEffettive" name="Entrate" fill="hsl(var(--primary))" />
-                <Bar dataKey="usciteEffettive" name="Uscite" fill="hsl(var(--muted-foreground))" />
+                <Bar dataKey="entrateEffettive" name="entrate" fill="hsl(var(--primary))" />
+                <Bar dataKey="usciteEffettive" name="uscite" fill="hsl(var(--muted-foreground))" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -229,8 +229,8 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Cassa Cumulata</CardTitle>
-            <CardDescription>Proiezione basata su effettivi + previsti</CardDescription>
+            <CardTitle>cassa cumulata</CardTitle>
+            <CardDescription>proiezione basata su effettivi + previsti</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -246,7 +246,7 @@ export default function Dashboard() {
                   formatter={(value) => formatCurrency(value as number)}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="cassa" name="Cassa" stroke="hsl(var(--primary))" strokeWidth={2} />
+                <Line type="monotone" dataKey="cassa" name="cassa" stroke="hsl(var(--primary))" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -256,12 +256,12 @@ export default function Dashboard() {
       {/* Prossime Scadenze */}
       <Card>
         <CardHeader>
-          <CardTitle>Prossime Scadenze (30 giorni)</CardTitle>
-          <CardDescription>Movimenti previsti in scadenza</CardDescription>
+          <CardTitle>prossime scadenze (30 giorni)</CardTitle>
+          <CardDescription>movimenti previsti in scadenza</CardDescription>
         </CardHeader>
         <CardContent>
           {prossimeScadenze.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nessuna scadenza nei prossimi 30 giorni</p>
+            <p className="text-sm text-muted-foreground">nessuna scadenza nei prossimi 30 giorni</p>
           ) : (
             <div className="space-y-2">
               {prossimeScadenze.map((scadenza, idx) => (

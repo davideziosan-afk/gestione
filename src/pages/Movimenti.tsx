@@ -55,28 +55,28 @@ export default function Movimenti() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Movimenti</h2>
-        <p className="text-muted-foreground">Tutti i movimenti finanziari (progetti + costi fissi)</p>
-      </div>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">movimenti</h2>
+          <p className="text-muted-foreground">tutti i movimenti finanziari (progetti + costi fissi)</p>
+        </div>
 
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filtri</CardTitle>
+          <CardTitle>filtri</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label>Cerca</Label>
+              <Label>cerca</Label>
               <Input
-                placeholder="Cerca per nome, categoria..."
+                placeholder="cerca per nome, categoria..."
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
               />
             </div>
             <div>
-              <Label>Stato</Label>
+              <Label>stato</Label>
               <Select value={filters.stato} onValueChange={(value) => setFilters({ ...filters, stato: value })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -90,7 +90,7 @@ export default function Movimenti() {
               </Select>
             </div>
             <div>
-              <Label>Tipo</Label>
+              <Label>tipo</Label>
               <Select value={filters.tipo} onValueChange={(value) => setFilters({ ...filters, tipo: value })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -109,12 +109,12 @@ export default function Movimenti() {
       {/* Results */}
       <Card>
         <CardHeader>
-          <CardTitle>Risultati ({filteredMovimenti.length})</CardTitle>
-          <CardDescription>Movimenti filtrati</CardDescription>
+          <CardTitle>risultati ({filteredMovimenti.length})</CardTitle>
+          <CardDescription>movimenti filtrati</CardDescription>
         </CardHeader>
         <CardContent>
           {filteredMovimenti.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nessun movimento trovato</p>
+            <p className="text-sm text-muted-foreground">nessun movimento trovato</p>
           ) : (
             <div className="space-y-2">
               {filteredMovimenti.map((movimento, idx) => (

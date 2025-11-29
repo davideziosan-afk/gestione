@@ -134,14 +134,14 @@ export default function Progetti() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Progetti</h2>
-          <p className="text-muted-foreground">Gestisci i progetti dello studio</p>
+          <h2 className="text-3xl font-bold tracking-tight">progetti</h2>
+          <p className="text-muted-foreground">gestisci i progetti dello studio</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => resetForm()}>
               <Plus className="h-4 w-4 mr-2" />
-              Nuovo Progetto
+              nuovo progetto
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -262,7 +262,7 @@ export default function Progetti() {
 
       {/* Search */}
       <Input
-        placeholder="Cerca per codice, nome o cliente..."
+        placeholder="cerca per codice, nome o cliente..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         className="max-w-sm"
@@ -271,14 +271,14 @@ export default function Progetti() {
       {/* Projects Table */}
       <div className="border border-border">
         <div className="grid grid-cols-12 gap-4 p-4 font-bold bg-secondary">
-          <div className="col-span-1">Codice</div>
-          <div className="col-span-2">Nome</div>
-          <div className="col-span-2">Cliente</div>
-          <div className="col-span-1">Stato</div>
-          <div className="col-span-2">Budget</div>
-          <div className="col-span-2">Costi Stim.</div>
-          <div className="col-span-1">Probab.</div>
-          <div className="col-span-1">Azioni</div>
+          <div className="col-span-1">codice</div>
+          <div className="col-span-2">nome</div>
+          <div className="col-span-2">cliente</div>
+          <div className="col-span-1">stato</div>
+          <div className="col-span-2">budget</div>
+          <div className="col-span-2">costi stim.</div>
+          <div className="col-span-1">probab.</div>
+          <div className="col-span-1">azioni</div>
         </div>
         {filteredProjects?.map((project) => (
           <div key={project.id} className="grid grid-cols-12 gap-4 p-4 border-t border-border items-center">

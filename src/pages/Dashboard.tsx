@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { AlertCircle, TrendingUp, TrendingDown, Euro } from "lucide-react";
 import { startOfYear, endOfMonth, format, startOfMonth, addMonths, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
+import { AIAssistant } from "@/components/AIAssistant";
 
 export default function Dashboard() {
   // Fetch all data
@@ -284,6 +285,9 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* AI Assistant */}
+      <AIAssistant />
     </div>
   );
 }

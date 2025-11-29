@@ -9,6 +9,7 @@ import {
   Euro,
   Upload
 } from "lucide-react";
+import logo from "@/assets/dpastudio-logo.png";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -28,7 +29,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Header */}
       <header className="border-b border-border">
         <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold tracking-tight">Studio Architettura</h1>
+          <img src={logo} alt="DPA Studio" className="h-8" />
         </div>
       </header>
 

@@ -14,6 +14,7 @@ import Cashflow from "./pages/Cashflow";
 import CompanyPrice from "./pages/CompanyPrice";
 import ImportCSV from "./pages/ImportCSV";
 import Auth from "./pages/Auth";
+import Setup2FA from "./pages/Setup2FA";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/setup-2fa" element={<ProtectedRoute><Setup2FA /></ProtectedRoute>} />
             <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
             <Route path="/progetti" element={<ProtectedRoute><Layout><Progetti /></Layout></ProtectedRoute>} />
             <Route path="/costi-fissi" element={<ProtectedRoute><Layout><CostiFissi /></Layout></ProtectedRoute>} />

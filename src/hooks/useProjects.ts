@@ -1,6 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const projectSchema = z.object({
+  nome: z.string().trim().min(1).max(200),
+  cliente: z.string().trim().min(1).max(200),
+  codice: z.string().trim().min(1).max(50),
+  budget_totale: z.number().min(0),
+  costi_stimati: z.number().min(0),
+  data_inizio: z.string(),
+  data_fine: z.string().optional().nullable(),
+  probabilita: z.number().min(0).max(100).optional(),
+  stato: z.enum(["Attivo", "In attesa", "Chiuso"]).optional(),
+});
 
 export function useProjects() {
   return useQuery({
@@ -39,9 +52,12 @@ export function useCreateProject() {
   
   return useMutation({
     mutationFn: async (project: any) => {
+      // Validate input
+      const validated = projectSchema.parse(project);
+      
       const { data, error } = await supabase
         .from("progetti")
-        .insert(project)
+        .insert(validated as any)
         .select()
         .single();
       
@@ -53,7 +69,11 @@ export function useCreateProject() {
       toast.success("Progetto creato con successo");
     },
     onError: (error: any) => {
-      toast.error("Errore durante la creazione del progetto: " + error.message);
+      if (error instanceof z.ZodError) {
+        toast.error("dati non validi: " + error.errors[0].message);
+      } else {
+        toast.error("Errore durante la creazione del progetto: " + error.message);
+      }
     },
   });
 }
@@ -63,9 +83,12 @@ export function useUpdateProject() {
   
   return useMutation({
     mutationFn: async ({ id, ...project }: any) => {
+      // Validate input
+      const validated = projectSchema.partial().parse(project);
+      
       const { data, error } = await supabase
         .from("progetti")
-        .update(project)
+        .update(validated as any)
         .eq("id", id)
         .select()
         .single();
@@ -78,7 +101,11 @@ export function useUpdateProject() {
       toast.success("Progetto aggiornato con successo");
     },
     onError: (error: any) => {
-      toast.error("Errore durante l'aggiornamento: " + error.message);
+      if (error instanceof z.ZodError) {
+        toast.error("dati non validi: " + error.errors[0].message);
+      } else {
+        toast.error("Errore durante l'aggiornamento: " + error.message);
+      }
     },
   });
 }

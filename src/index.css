@@ -1,5 +1,19 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Space+Mono&display=swap");
+@font-face {
+  font-family: 'Helvetica Condensed';
+  src: url('/fonts/HelveticaCD-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Condensed';
+  src: url('/fonts/HelveticaCD-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap");
 @tailwind base;
 @tailwind components;
@@ -69,7 +83,7 @@ All colors MUST be HSL.
 
     --sidebar: 0 0% 98%;
 
-    --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+    --font-sans: "Helvetica Condensed", ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
 
     --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
 
@@ -147,7 +161,7 @@ All colors MUST be HSL.
     --shadow-lg: -10px -10px 0px -10px hsla(213, 94%, 68%, 0);
     --shadow-xl: 16px 16px 0px 0px #ffffff;
     --shadow-2xl: 24px 24px 0px 0px #ffffff;
-    --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+    --font-sans: "Helvetica Condensed", ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
     --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
   }
 }

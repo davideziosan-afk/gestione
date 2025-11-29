@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
@@ -7,9 +7,13 @@ import {
   ArrowLeftRight, 
   TrendingUp, 
   Euro,
-  Upload
+  Upload,
+  LogOut
 } from "lucide-react";
 import logo from "@/assets/dpastudio-logo.png";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Button } from "./ui/button";
 
 const navigation = [
   { name: "dashboard", href: "/", icon: LayoutDashboard },
@@ -23,6 +27,17 @@ const navigation = [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('errore durante il logout');
+    } else {
+      toast.success('logout effettuato');
+      navigate('/auth');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,6 +71,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </Link>
                 );
               })}
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-4 py-2 text-sm font-medium border border-border transition-colors whitespace-nowrap bg-background hover:bg-secondary"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                <span>esci</span>
+              </Button>
             </nav>
           </aside>
 

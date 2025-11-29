@@ -15,6 +15,8 @@ import CompanyPrice from "./pages/CompanyPrice";
 import ImportCSV from "./pages/ImportCSV";
 import Auth from "./pages/Auth";
 import Setup2FA from "./pages/Setup2FA";
+import PendingApproval from "./pages/PendingApproval";
+import AdminApprovals from "./pages/AdminApprovals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/pending-approval" element={<PendingApproval />} />
             <Route path="/setup-2fa" element={<ProtectedRoute><Setup2FA /></ProtectedRoute>} />
             <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
             <Route path="/progetti" element={<ProtectedRoute><Layout><Progetti /></Layout></ProtectedRoute>} />
@@ -36,6 +39,7 @@ const App = () => (
             <Route path="/cashflow" element={<ProtectedRoute><Layout><Cashflow /></Layout></ProtectedRoute>} />
             <Route path="/company-price" element={<ProtectedRoute><Layout><CompanyPrice /></Layout></ProtectedRoute>} />
             <Route path="/import" element={<ProtectedRoute><Layout><ImportCSV /></Layout></ProtectedRoute>} />
+            <Route path="/admin/approvals" element={<ProtectedRoute><Layout><AdminApprovals /></Layout></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

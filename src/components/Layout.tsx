@@ -8,12 +8,15 @@ import {
   TrendingUp, 
   Euro,
   Upload,
-  LogOut
+  LogOut,
+  UserCheck
 } from "lucide-react";
 import logo from "@/assets/dpastudio-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
+import { useIsAdmin } from "@/hooks/useUserApproval";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navigation = [
   { name: "dashboard", href: "/", icon: LayoutDashboard },
@@ -28,6 +31,8 @@ const navigation = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: isAdmin } = useIsAdmin(user?.id);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -71,6 +76,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </Link>
                 );
               })}
+              {isAdmin && (
+                <Link
+                  to="/admin/approvals"
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-2 text-sm font-medium border border-border transition-colors whitespace-nowrap",
+                    location.pathname === "/admin/approvals"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background hover:bg-secondary"
+                  )}
+                >
+                  <UserCheck className="h-4 w-4 shrink-0" />
+                  <span>approvazioni</span>
+                </Link>
+              )}
               <Button
                 variant="ghost"
                 onClick={handleLogout}

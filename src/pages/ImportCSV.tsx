@@ -144,14 +144,14 @@ export default function ImportCSV() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Import CSV</h2>
-        <p className="text-muted-foreground">Importa dati da file CSV</p>
+        <h2 className="text-3xl font-bold tracking-tight">import csv</h2>
+        <p className="text-muted-foreground">importa dati da file csv</p>
       </div>
 
       <Tabs defaultValue="fasi">
         <TabsList>
-          <TabsTrigger value="fasi">Fasi Progetto</TabsTrigger>
-          <TabsTrigger value="movimenti">Movimenti Fissi</TabsTrigger>
+          <TabsTrigger value="fasi">fasi progetto</TabsTrigger>
+          <TabsTrigger value="movimenti">movimenti fissi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="fasi" className="space-y-4">

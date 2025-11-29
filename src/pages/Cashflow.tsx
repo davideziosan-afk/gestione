@@ -101,29 +101,29 @@ export default function Cashflow() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Cashflow Mensile</h2>
-        <p className="text-muted-foreground">Analisi dettagliata per mese</p>
+        <h2 className="text-3xl font-bold tracking-tight">cashflow mensile</h2>
+        <p className="text-muted-foreground">analisi dettagliata per mese</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Tabella Cashflow</CardTitle>
-          <CardDescription>Ultimi 6 mesi + prossimi 6 mesi</CardDescription>
+          <CardTitle>tabella cashflow</CardTitle>
+          <CardDescription>ultimi 6 mesi + prossimi 6 mesi</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <div className="min-w-[800px]">
               {/* Header */}
               <div className="grid grid-cols-9 gap-2 p-3 font-bold bg-secondary border border-border text-xs">
-                <div>Mese</div>
-                <div className="text-right">Entrate Eff.</div>
-                <div className="text-right">Entrate Prev.</div>
-                <div className="text-right">Uscite Eff.</div>
-                <div className="text-right">Uscite Prev.</div>
-                <div className="text-right">Saldo Eff.</div>
-                <div className="text-right">Saldo Prev.</div>
-                <div className="text-right">Saldo Tot.</div>
-                <div className="text-right">Cassa Cum.</div>
+                <div>mese</div>
+                <div className="text-right">entrate eff.</div>
+                <div className="text-right">entrate prev.</div>
+                <div className="text-right">uscite eff.</div>
+                <div className="text-right">uscite prev.</div>
+                <div className="text-right">saldo eff.</div>
+                <div className="text-right">saldo prev.</div>
+                <div className="text-right">saldo tot.</div>
+                <div className="text-right">cassa cum.</div>
               </div>
 
               {/* Data Rows */}

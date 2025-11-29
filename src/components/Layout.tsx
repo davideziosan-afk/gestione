@@ -12,13 +12,13 @@ import {
 import logo from "@/assets/dpastudio-logo.png";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Progetti", href: "/progetti", icon: FolderKanban },
-  { name: "Costi Fissi", href: "/costi-fissi", icon: Receipt },
-  { name: "Movimenti", href: "/movimenti", icon: ArrowLeftRight },
-  { name: "Cashflow", href: "/cashflow", icon: TrendingUp },
-  { name: "Tariffe", href: "/company-price", icon: Euro },
-  { name: "Import CSV", href: "/import", icon: Upload },
+  { name: "dashboard", href: "/", icon: LayoutDashboard },
+  { name: "progetti", href: "/progetti", icon: FolderKanban },
+  { name: "costi fissi", href: "/costi-fissi", icon: Receipt },
+  { name: "movimenti", href: "/movimenti", icon: ArrowLeftRight },
+  { name: "cashflow", href: "/cashflow", icon: TrendingUp },
+  { name: "tariffe", href: "/company-price", icon: Euro },
+  { name: "import csv", href: "/import", icon: Upload },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

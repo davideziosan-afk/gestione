@@ -53,7 +53,7 @@ All colors MUST be HSL.
     --input: 0 0% 0%;
     --ring: 0 0% 0%;
 
-    --radius: 0rem;
+    --radius: 3rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -93,13 +93,13 @@ All colors MUST be HSL.
 
     --shadow-xs: 2px 2px 0px 0px #000000;
 
-    --shadow-sm: 3px 3px 0px 0px #000000;
+    --shadow-sm: -10px -10px 0px -10px hsl(0, 0%, 0%);
 
-    --shadow: 5px 5px 0px 0px #000000;
+    --shadow: -10px -10px 0px -10px hsl(0, 0%, 0%);
 
-    --shadow-md: 8px 8px 0px 0px #000000;
+    --shadow-md: -10px -10px 0px -10px hsl(0, 0%, 0%);
 
-    --shadow-lg: 12px 12px 0px 0px #000000;
+    --shadow-lg: -10px -10px 0px -10px hsl(0, 0%, 0%);
 
     --shadow-xl: 16px 16px 0px 0px #000000;
 
@@ -152,13 +152,13 @@ All colors MUST be HSL.
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
     --sidebar: 0 0% 5%;
-    --radius: 2.25rem;
+    --radius: 3rem;
     --shadow-2xs: 1px 1px 0px 0px #ffffff;
     --shadow-xs: 2px 2px 0px 0px #ffffff;
-    --shadow-sm: -10px -10px 0px -10px hsla(213, 94%, 68%, 0);
-    --shadow: -10px -10px 0px -10px hsla(213, 94%, 68%, 0);
-    --shadow-md: -10px -10px 0px -10px hsla(213, 94%, 68%, 0);
-    --shadow-lg: -10px -10px 0px -10px hsla(213, 94%, 68%, 0);
+    --shadow-sm: -10px -10px 0px -10px hsl(0, 0%, 0%);
+    --shadow: -10px -10px 0px -10px hsl(0, 0%, 0%);
+    --shadow-md: -10px -10px 0px -10px hsl(0, 0%, 0%);
+    --shadow-lg: -10px -10px 0px -10px hsl(0, 0%, 0%);
     --shadow-xl: 16px 16px 0px 0px #ffffff;
     --shadow-2xl: 24px 24px 0px 0px #ffffff;
     --font-sans: "Helvetica Condensed", ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;

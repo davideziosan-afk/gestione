@@ -9,7 +9,10 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 const authSchema = z.object({
-  email: z.string().trim().email({ message: "email non valida" }).max(255),
+  email: z.string().trim().email({ message: "email non valida" }).max(255).refine(
+    (email) => email.endsWith('@dpastudio.it'),
+    { message: "solo email @dpastudio.it sono consentite" }
+  ),
   password: z.string().min(6, { message: "la password deve essere di almeno 6 caratteri" }).max(100),
 });
 

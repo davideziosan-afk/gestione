@@ -155,3 +155,48 @@ export function useMarkMovimentoAsPagato() {
     },
   });
 }
+
+export function useDeleteCostoFisso() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("costi_fissi")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["costi_fissi"] });
+      queryClient.invalidateQueries({ queryKey: ["movimenti_fissi"] });
+      toast.success("Costo fisso eliminato");
+    },
+    onError: (error: any) => {
+      toast.error("Errore: " + error.message);
+    },
+  });
+}
+
+export function useDeleteMovimentoFisso() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("movimenti_fissi")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["movimenti_fissi"] });
+      toast.success("Movimento eliminato");
+    },
+    onError: (error: any) => {
+      toast.error("Errore: " + error.message);
+    },
+  });
+}

@@ -5,11 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useFasiProgetto } from "@/hooks/useFasiProgetto";
-import { useMovimentiFissi, useCostiFissi, useCreateCostoFisso, useGenerateMovimentiFissi, useMarkMovimentoAsPagato } from "@/hooks/useCostiFissi";
+import { useFasiProgetto, useDeleteFase, useMarkAsIncassato, useMarkAsPagato as useMarkFaseAsPagato } from "@/hooks/useFasiProgetto";
+import { useMovimentiFissi, useCostiFissi, useCreateCostoFisso, useGenerateMovimentiFissi, useMarkMovimentoAsPagato, useDeleteCostoFisso, useDeleteMovimentoFisso } from "@/hooks/useCostiFissi";
 import { formatCurrency, formatDate } from "@/lib/dateUtils";
 import { Badge } from "@/components/ui/badge";
-import { Plus, CheckCircle2, RefreshCw } from "lucide-react";
+import { Plus, CheckCircle2, RefreshCw, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Movimenti() {
@@ -19,6 +19,11 @@ export default function Movimenti() {
   const createCostoFisso = useCreateCostoFisso();
   const generateMovimenti = useGenerateMovimentiFissi();
   const markAsPagato = useMarkMovimentoAsPagato();
+  const deleteCostoFisso = useDeleteCostoFisso();
+  const deleteMovimentoFisso = useDeleteMovimentoFisso();
+  const deleteFase = useDeleteFase();
+  const markFaseAsIncassato = useMarkAsIncassato();
+  const markFaseAsPagato = useMarkFaseAsPagato();
 
   const [filters, setFilters] = useState({
     search: "",
@@ -203,16 +208,40 @@ export default function Movimenti() {
                         </div>
                         <div className="flex items-center gap-2">
                           <p className="font-bold">{formatCurrency(movimento.importo)}</p>
-                          {movimento.is_fisso && movimento.stato === 'Previsto' && (
+                          {movimento.stato === 'Previsto' && (
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => markAsPagato.mutate(movimento.id)}
-                              title="Segna pagato"
+                              onClick={() => {
+                                if (movimento.is_fisso) {
+                                  markAsPagato.mutate(movimento.id);
+                                } else if (movimento.tipo === 'Costo') {
+                                  markFaseAsPagato.mutate(movimento.id);
+                                } else {
+                                  markFaseAsIncassato.mutate(movimento.id);
+                                }
+                              }}
+                              title={movimento.tipo === 'Ricavo' ? "Segna incassato" : "Segna pagato"}
                             >
                               <CheckCircle2 className="h-4 w-4" />
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              if (confirm("Eliminare questo movimento?")) {
+                                if (movimento.is_fisso) {
+                                  deleteMovimentoFisso.mutate(movimento.id);
+                                } else {
+                                  deleteFase.mutate(movimento.id);
+                                }
+                              }
+                            }}
+                            title="Elimina"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -315,15 +344,28 @@ export default function Movimenti() {
                           {formatCurrency(costo.importo_mensile)}/mese · scadenza giorno {costo.giorno_scadenza} · {costo.categoria}
                         </p>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => generateMovimenti.mutate(costo.id)}
-                        disabled={generateMovimenti.isPending}
-                      >
-                        <RefreshCw className="h-3 w-3 mr-1" />
-                        genera 12 mesi
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => generateMovimenti.mutate(costo.id)}
+                          disabled={generateMovimenti.isPending}
+                        >
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                          genera 12 mesi
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            if (confirm("Eliminare questo costo fisso?")) {
+                              deleteCostoFisso.mutate(costo.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -369,6 +411,18 @@ export default function Movimenti() {
                             <CheckCircle2 className="h-4 w-4" />
                           </Button>
                         )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            if (confirm("Eliminare questo movimento?")) {
+                              deleteMovimentoFisso.mutate(mov.id);
+                            }
+                          }}
+                          title="Elimina"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   ))}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,17 @@ import { useFasiProgetto, useCreateFase, useUpdateFase, useMarkAsIncassato, useM
 import { formatCurrency, formatDate } from "@/lib/dateUtils";
 import { Plus, Edit2, Trash2, Eye, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+
+// Generate project code: YYYY-NNN format
+const generateProjectCode = (existingProjects: any[] | undefined) => {
+  const currentYear = new Date().getFullYear();
+  const yearProjects = existingProjects?.filter(p => p.codice?.startsWith(`${currentYear}-`)) || [];
+  const maxNumber = yearProjects.reduce((max, p) => {
+    const num = parseInt(p.codice?.split('-')[1] || '0', 10);
+    return num > max ? num : max;
+  }, 0);
+  return `${currentYear}-${String(maxNumber + 1).padStart(3, '0')}`;
+};
 
 export default function Progetti() {
   const { data: progetti, isLoading } = useProjects();
@@ -32,6 +43,9 @@ export default function Progetti() {
   const [statusFilter, setStatusFilter] = useState("all");
   
   const { data: fasi } = useFasiProgetto(selectedProject?.id);
+
+  // Auto-generate code for new projects
+  const nextProjectCode = useMemo(() => generateProjectCode(progetti), [progetti]);
 
   const [formData, setFormData] = useState({
     codice: "",
@@ -63,7 +77,8 @@ export default function Progetti() {
     if (selectedProject) {
       await updateProject.mutateAsync({ id: selectedProject.id, ...formData });
     } else {
-      await createProject.mutateAsync(formData);
+      // Use auto-generated code for new projects
+      await createProject.mutateAsync({ ...formData, codice: nextProjectCode });
     }
     setDialogOpen(false);
     resetForm();
@@ -194,10 +209,14 @@ export default function Progetti() {
                   <Label htmlFor="codice">Codice</Label>
                   <Input
                     id="codice"
-                    value={formData.codice}
+                    value={selectedProject ? formData.codice : nextProjectCode}
                     onChange={(e) => setFormData({ ...formData, codice: e.target.value })}
-                    required
+                    disabled={!selectedProject}
+                    className={!selectedProject ? "bg-muted" : ""}
                   />
+                  {!selectedProject && (
+                    <p className="text-xs text-muted-foreground mt-1">Generato automaticamente</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="stato">Stato</Label>

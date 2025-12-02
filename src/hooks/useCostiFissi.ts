@@ -156,6 +156,63 @@ export function useMarkMovimentoAsPagato() {
   });
 }
 
+export function useCreateMovimentoUnaTantum() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (movimento: {
+      descrizione: string;
+      importo: number;
+      data_prevista: string;
+      categoria: string;
+      note?: string;
+    }) => {
+      // We'll use movimenti_fissi with tipo_uscita = 'una_tantum' and a dummy costo_fisso_id
+      // First create a temporary costo_fisso entry
+      const { data: costoFisso, error: costoError } = await supabase
+        .from("costi_fissi")
+        .insert({
+          voce: movimento.descrizione,
+          importo_mensile: movimento.importo,
+          giorno_scadenza: 1,
+          categoria: movimento.categoria,
+          note: movimento.note || null,
+          attivo: false, // Mark as inactive since it's one-time
+        })
+        .select()
+        .single();
+      
+      if (costoError) throw costoError;
+      
+      // Then create the movimento
+      const { data, error } = await supabase
+        .from("movimenti_fissi")
+        .insert({
+          costo_fisso_id: costoFisso.id,
+          mese: movimento.data_prevista,
+          data_prevista: movimento.data_prevista,
+          importo: movimento.importo,
+          stato: "Previsto",
+          categoria: movimento.categoria,
+          note: movimento.descrizione,
+          tipo_uscita: "una_tantum",
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["movimenti_fissi"] });
+      toast.success("Movimento creato con successo");
+    },
+    onError: (error: any) => {
+      toast.error("Errore: " + error.message);
+    },
+  });
+}
+
 export function useDeleteCostoFisso() {
   const queryClient = useQueryClient();
   

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useFasiProgetto, useDeleteFase, useMarkAsIncassato, useMarkAsPagato as useMarkFaseAsPagato } from "@/hooks/useFasiProgetto";
-import { useMovimentiFissi, useCostiFissi, useCreateCostoFisso, useGenerateMovimentiFissi, useMarkMovimentoAsPagato, useDeleteCostoFisso, useDeleteMovimentoFisso } from "@/hooks/useCostiFissi";
+import { useMovimentiFissi, useCostiFissi, useCreateCostoFisso, useGenerateMovimentiFissi, useMarkMovimentoAsPagato, useDeleteCostoFisso, useDeleteMovimentoFisso, useCreateMovimentoUnaTantum } from "@/hooks/useCostiFissi";
 import { formatCurrency, formatDate } from "@/lib/dateUtils";
 import { Badge } from "@/components/ui/badge";
 import { Plus, CheckCircle2, RefreshCw, Trash2 } from "lucide-react";
@@ -24,6 +24,7 @@ export default function Movimenti() {
   const deleteFase = useDeleteFase();
   const markFaseAsIncassato = useMarkAsIncassato();
   const markFaseAsPagato = useMarkFaseAsPagato();
+  const createMovimentoUnaTantum = useCreateMovimentoUnaTantum();
 
   const [filters, setFilters] = useState({
     search: "",
@@ -33,10 +34,18 @@ export default function Movimenti() {
   });
 
   const [costoDialogOpen, setCostoDialogOpen] = useState(false);
+  const [movimentoDialogOpen, setMovimentoDialogOpen] = useState(false);
   const [costoForm, setCostoForm] = useState({
     voce: "",
     importo_mensile: "",
     giorno_scadenza: "1",
+    categoria: "",
+    note: "",
+  });
+  const [movimentoForm, setMovimentoForm] = useState({
+    descrizione: "",
+    importo: "",
+    data_prevista: "",
     categoria: "",
     note: "",
   });
@@ -52,6 +61,19 @@ export default function Movimenti() {
     });
     setCostoDialogOpen(false);
     setCostoForm({ voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "" });
+  };
+
+  const handleMovimentoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await createMovimentoUnaTantum.mutateAsync({
+      descrizione: movimentoForm.descrizione,
+      importo: parseFloat(movimentoForm.importo),
+      data_prevista: movimentoForm.data_prevista,
+      categoria: movimentoForm.categoria,
+      note: movimentoForm.note || undefined,
+    });
+    setMovimentoDialogOpen(false);
+    setMovimentoForm({ descrizione: "", importo: "", data_prevista: "", categoria: "", note: "" });
   };
 
   // Combine all movements
@@ -104,6 +126,75 @@ export default function Movimenti() {
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">movimenti</h2>
           <p className="text-muted-foreground text-sm">tutti i movimenti finanziari</p>
         </div>
+        <Dialog open={movimentoDialogOpen} onOpenChange={setMovimentoDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              nuovo movimento
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nuovo Movimento Una Tantum</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleMovimentoSubmit} className="space-y-4">
+              <div>
+                <Label>Descrizione</Label>
+                <Input
+                  value={movimentoForm.descrizione}
+                  onChange={(e) => setMovimentoForm({ ...movimentoForm, descrizione: e.target.value })}
+                  placeholder="es. Acquisto attrezzatura"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Importo (€)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={movimentoForm.importo}
+                    onChange={(e) => setMovimentoForm({ ...movimentoForm, importo: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Data Prevista</Label>
+                  <Input
+                    type="date"
+                    value={movimentoForm.data_prevista}
+                    onChange={(e) => setMovimentoForm({ ...movimentoForm, data_prevista: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Categoria</Label>
+                <Input
+                  value={movimentoForm.categoria}
+                  onChange={(e) => setMovimentoForm({ ...movimentoForm, categoria: e.target.value })}
+                  placeholder="es. Forniture, Servizi..."
+                  required
+                />
+              </div>
+              <div>
+                <Label>Note (opzionale)</Label>
+                <Input
+                  value={movimentoForm.note}
+                  onChange={(e) => setMovimentoForm({ ...movimentoForm, note: e.target.value })}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="secondary" onClick={() => setMovimentoDialogOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" disabled={createMovimentoUnaTantum.isPending}>
+                  Salva
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Tabs defaultValue="tutti">

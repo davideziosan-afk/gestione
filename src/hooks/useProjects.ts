@@ -7,11 +7,11 @@ const projectSchema = z.object({
   nome: z.string().trim().min(1).max(200),
   cliente: z.string().trim().min(1).max(200),
   codice: z.string().trim().min(1).max(50),
-  budget_totale: z.number().min(0),
-  costi_stimati: z.number().min(0),
+  budget_totale: z.coerce.number().min(0),
+  costi_stimati: z.coerce.number().min(0),
   data_inizio: z.string(),
   data_fine: z.string().optional().nullable(),
-  probabilita: z.number().min(0).max(100).optional(),
+  probabilita: z.coerce.number().min(0).max(100).optional(),
   stato: z.enum(["Attivo", "In attesa", "Chiuso"]).optional(),
 });
 

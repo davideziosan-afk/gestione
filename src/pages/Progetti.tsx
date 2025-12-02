@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProjects, useCreateProject, useUpdateProject, useDeleteProject } from "@/hooks/useProjects";
 import { useFasiProgetto, useCreateFase, useUpdateFase, useMarkAsIncassato, useMarkAsPagato, useDeleteFase } from "@/hooks/useFasiProgetto";
+import { useProjectCostsMap } from "@/hooks/useProjectCosts";
 import { formatCurrency, formatDate } from "@/lib/dateUtils";
 import { Plus, Edit2, Trash2, Eye, CheckCircle2, Box } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,7 @@ export default function Progetti() {
   const {
     data: fasi
   } = useFasiProgetto(selectedProject?.id);
+  const projectCostsMap = useProjectCostsMap();
 
   // Auto-generate code for new projects
   const nextProjectCode = useMemo(() => generateProjectCode(progetti), [progetti]);
@@ -219,8 +221,8 @@ export default function Progetti() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Attivo">Attivo</SelectItem>
-                      <SelectItem value="In pausa">In pausa</SelectItem>
-                      <SelectItem value="Terminato">Terminato</SelectItem>
+                      <SelectItem value="In attesa">In attesa</SelectItem>
+                      <SelectItem value="Chiuso">Chiuso</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -299,8 +301,8 @@ export default function Progetti() {
           <SelectContent>
             <SelectItem value="all">Tutti</SelectItem>
             <SelectItem value="Attivo">Attivo</SelectItem>
-            <SelectItem value="In pausa">In pausa</SelectItem>
-            <SelectItem value="Terminato">Terminato</SelectItem>
+            <SelectItem value="In attesa">In attesa</SelectItem>
+            <SelectItem value="Chiuso">Chiuso</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -371,12 +373,15 @@ export default function Progetti() {
             <div className="col-span-2">nome</div>
             <div className="col-span-2">cliente</div>
             <div className="col-span-1">stato</div>
-            <div className="col-span-2">budget</div>
-            <div className="col-span-2">costi stim.</div>
+            <div className="col-span-1">budget</div>
+            <div className="col-span-1">costi stim.</div>
+            <div className="col-span-1">costi eff.</div>
             <div className="col-span-1">prob.</div>
-            <div className="col-span-1">azioni</div>
+            <div className="col-span-2">azioni</div>
           </div>
-          {filteredProjects?.map(project => <div key={project.id} className="grid grid-cols-12 gap-4 p-4 border-t border-border items-center text-sm">
+          {filteredProjects?.map(project => {
+            const projectCosts = projectCostsMap.get(project.id) || { costiEffettivi: 0, ricaviEffettivi: 0 };
+            return <div key={project.id} className="grid grid-cols-12 gap-4 p-4 border-t border-border items-center text-sm">
               <div className="col-span-1 font-mono font-bold truncate">{project.codice}</div>
               <div className="col-span-2 truncate">{project.nome}</div>
               <div className="col-span-2 truncate">{project.cliente}</div>
@@ -385,10 +390,11 @@ export default function Progetti() {
                   {project.stato}
                 </Badge>
               </div>
-              <div className="col-span-2">{formatCurrency(project.budget_totale)}</div>
-              <div className="col-span-2">{formatCurrency(project.costi_stimati)}</div>
+              <div className="col-span-1">{formatCurrency(project.budget_totale)}</div>
+              <div className="col-span-1">{formatCurrency(project.costi_stimati)}</div>
+              <div className="col-span-1">{formatCurrency(projectCosts.costiEffettivi)}</div>
               <div className="col-span-1">{project.probabilita}%</div>
-              <div className="col-span-1 flex gap-1">
+              <div className="col-span-2 flex gap-1">
                 <Button size="sm" variant="ghost" onClick={() => {
               setSelectedProject(project);
               setDetailOpen(true);
@@ -420,7 +426,8 @@ export default function Progetti() {
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
-            </div>)}
+            </div>
+          })}
         </div>
       </div>
 

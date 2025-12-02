@@ -8,15 +8,13 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Progetti from "./pages/Progetti";
-import CostiFissi from "./pages/CostiFissi";
 import Movimenti from "./pages/Movimenti";
 import Cashflow from "./pages/Cashflow";
 import CompanyPrice from "./pages/CompanyPrice";
-import ImportCSV from "./pages/ImportCSV";
+import Impostazioni from "./pages/Impostazioni";
 import Auth from "./pages/Auth";
 import Setup2FA from "./pages/Setup2FA";
 import PendingApproval from "./pages/PendingApproval";
-import AdminApprovals from "./pages/AdminApprovals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,12 +32,10 @@ const App = () => (
             <Route path="/setup-2fa" element={<ProtectedRoute><Setup2FA /></ProtectedRoute>} />
             <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
             <Route path="/progetti" element={<ProtectedRoute><Layout><Progetti /></Layout></ProtectedRoute>} />
-            <Route path="/costi-fissi" element={<ProtectedRoute><Layout><CostiFissi /></Layout></ProtectedRoute>} />
             <Route path="/movimenti" element={<ProtectedRoute><Layout><Movimenti /></Layout></ProtectedRoute>} />
             <Route path="/cashflow" element={<ProtectedRoute><Layout><Cashflow /></Layout></ProtectedRoute>} />
             <Route path="/company-price" element={<ProtectedRoute><Layout><CompanyPrice /></Layout></ProtectedRoute>} />
-            <Route path="/import" element={<ProtectedRoute><Layout><ImportCSV /></Layout></ProtectedRoute>} />
-            <Route path="/admin/approvals" element={<ProtectedRoute><Layout><AdminApprovals /></Layout></ProtectedRoute>} />
+            <Route path="/impostazioni" element={<ProtectedRoute><Layout><Impostazioni /></Layout></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      categorie: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       company_price: {
         Row: {
           attivo: boolean
@@ -80,12 +104,50 @@ export type Database = {
         }
         Relationships: []
       }
+      fase_tags: {
+        Row: {
+          fase_id: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          fase_id: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          fase_id?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fase_tags_fase_id_fkey"
+            columns: ["fase_id"]
+            isOneToOne: false
+            referencedRelation: "fasi_progetto"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fase_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fasi_progetto: {
         Row: {
           categoria: string
+          categoria_id: string | null
           created_at: string
           data_effettiva: string | null
+          data_effettiva_fattura: string | null
+          data_effettiva_pagamento: string | null
           data_prevista: string
+          data_prevista_fattura: string | null
+          data_prevista_pagamento: string | null
           fase: string
           id: string
           importo: number
@@ -97,9 +159,14 @@ export type Database = {
         }
         Insert: {
           categoria: string
+          categoria_id?: string | null
           created_at?: string
           data_effettiva?: string | null
+          data_effettiva_fattura?: string | null
+          data_effettiva_pagamento?: string | null
           data_prevista: string
+          data_prevista_fattura?: string | null
+          data_prevista_pagamento?: string | null
           fase: string
           id?: string
           importo: number
@@ -111,9 +178,14 @@ export type Database = {
         }
         Update: {
           categoria?: string
+          categoria_id?: string | null
           created_at?: string
           data_effettiva?: string | null
+          data_effettiva_fattura?: string | null
+          data_effettiva_pagamento?: string | null
           data_prevista?: string
+          data_prevista_fattura?: string | null
+          data_prevista_pagamento?: string | null
           fase?: string
           id?: string
           importo?: number
@@ -124,6 +196,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fasi_progetto_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorie"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fasi_progetto_progetto_id_fkey"
             columns: ["progetto_id"]
@@ -136,6 +215,7 @@ export type Database = {
       movimenti_fissi: {
         Row: {
           categoria: string
+          categoria_id: string | null
           costo_fisso_id: string
           created_at: string
           data_effettiva: string | null
@@ -145,10 +225,12 @@ export type Database = {
           mese: string
           note: string | null
           stato: Database["public"]["Enums"]["stato_movimento"]
+          tipo_uscita: string
           updated_at: string
         }
         Insert: {
           categoria: string
+          categoria_id?: string | null
           costo_fisso_id: string
           created_at?: string
           data_effettiva?: string | null
@@ -158,10 +240,12 @@ export type Database = {
           mese: string
           note?: string | null
           stato?: Database["public"]["Enums"]["stato_movimento"]
+          tipo_uscita?: string
           updated_at?: string
         }
         Update: {
           categoria?: string
+          categoria_id?: string | null
           costo_fisso_id?: string
           created_at?: string
           data_effettiva?: string | null
@@ -171,14 +255,55 @@ export type Database = {
           mese?: string
           note?: string | null
           stato?: Database["public"]["Enums"]["stato_movimento"]
+          tipo_uscita?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "movimenti_fissi_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorie"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "movimenti_fissi_costo_fisso_id_fkey"
             columns: ["costo_fisso_id"]
             isOneToOne: false
             referencedRelation: "costi_fissi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      movimento_fisso_tags: {
+        Row: {
+          id: string
+          movimento_fisso_id: string
+          tag_id: string
+        }
+        Insert: {
+          id?: string
+          movimento_fisso_id: string
+          tag_id: string
+        }
+        Update: {
+          id?: string
+          movimento_fisso_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimento_fisso_tags_movimento_fisso_id_fkey"
+            columns: ["movimento_fisso_id"]
+            isOneToOne: false
+            referencedRelation: "movimenti_fissi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimento_fisso_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
             referencedColumns: ["id"]
           },
         ]
@@ -255,6 +380,24 @@ export type Database = {
         }
         Relationships: []
       }
+      tags: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       user_approvals: {
         Row: {
           approved: boolean
@@ -322,7 +465,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      stato_movimento: "Previsto" | "Incassato" | "Pagato"
+      stato_movimento:
+        | "Previsto"
+        | "Incassato"
+        | "Pagato"
+        | "Fatturato"
+        | "Annullato"
       stato_progetto: "Attivo" | "In attesa" | "Chiuso"
       tipo_movimento: "Ricavo" | "Costo"
     }
@@ -453,7 +601,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      stato_movimento: ["Previsto", "Incassato", "Pagato"],
+      stato_movimento: [
+        "Previsto",
+        "Incassato",
+        "Pagato",
+        "Fatturato",
+        "Annullato",
+      ],
       stato_progetto: ["Attivo", "In attesa", "Chiuso"],
       tipo_movimento: ["Ricavo", "Costo"],
     },

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProjects, useCreateProject, useUpdateProject, useDeleteProject } from "@/hooks/useProjects";
-import { useFasiProgetto, useCreateFase, useMarkAsIncassato, useMarkAsPagato, useDeleteFase } from "@/hooks/useFasiProgetto";
+import { useFasiProgetto, useCreateFase, useUpdateFase, useMarkAsIncassato, useMarkAsPagato, useDeleteFase } from "@/hooks/useFasiProgetto";
 import { formatCurrency, formatDate } from "@/lib/dateUtils";
 import { Plus, Edit2, Trash2, Eye, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ export default function Progetti() {
   const deleteProject = useDeleteProject();
   
   const createFase = useCreateFase();
+  const updateFase = useUpdateFase();
   const markAsIncassato = useMarkAsIncassato();
   const markAsPagato = useMarkAsPagato();
   const deleteFase = useDeleteFase();
@@ -26,7 +27,9 @@ export default function Progetti() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [faseDialogOpen, setFaseDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [selectedFase, setSelectedFase] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   
   const { data: fasi } = useFasiProgetto(selectedProject?.id);
 
@@ -48,7 +51,10 @@ export default function Progetti() {
     categoria: "",
     importo: "",
     stato: "Previsto",
-    data_prevista: "",
+    data_prevista_fattura: "",
+    data_effettiva_fattura: "",
+    data_prevista_pagamento: "",
+    data_effettiva_pagamento: "",
     note: "",
   });
 
@@ -65,10 +71,26 @@ export default function Progetti() {
 
   const handleFaseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createFase.mutateAsync({
+    const faseData = {
       progetto_id: selectedProject.id,
-      ...faseFormData,
-    });
+      fase: faseFormData.fase,
+      tipo: faseFormData.tipo,
+      categoria: faseFormData.categoria,
+      importo: faseFormData.importo,
+      stato: faseFormData.stato,
+      data_prevista: faseFormData.data_prevista_pagamento || new Date().toISOString().split('T')[0],
+      data_prevista_fattura: faseFormData.data_prevista_fattura || null,
+      data_effettiva_fattura: faseFormData.data_effettiva_fattura || null,
+      data_prevista_pagamento: faseFormData.data_prevista_pagamento || null,
+      data_effettiva_pagamento: faseFormData.data_effettiva_pagamento || null,
+      note: faseFormData.note || null,
+    };
+
+    if (selectedFase) {
+      await updateFase.mutateAsync({ id: selectedFase.id, ...faseData });
+    } else {
+      await createFase.mutateAsync(faseData);
+    }
     setFaseDialogOpen(false);
     resetFaseForm();
   };
@@ -95,18 +117,24 @@ export default function Progetti() {
       categoria: "",
       importo: "",
       stato: "Previsto",
-      data_prevista: "",
+      data_prevista_fattura: "",
+      data_effettiva_fattura: "",
+      data_prevista_pagamento: "",
+      data_effettiva_pagamento: "",
       note: "",
     });
+    setSelectedFase(null);
   };
 
-  const filteredProjects = progetti?.filter(p =>
-    p.codice.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.cliente.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProjects = progetti?.filter(p => {
+    const matchesSearch = 
+      p.codice.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.cliente.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || p.stato === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-  // Calculate project totals
   const calculateTotals = (projectFasi: any[]) => {
     const ricaviEffettivi = projectFasi.filter(f => f.tipo === 'Ricavo' && f.stato === 'Incassato')
       .reduce((sum, f) => sum + parseFloat(String(f.importo)), 0);
@@ -126,31 +154,42 @@ export default function Progetti() {
     };
   };
 
+  const getStatoBadgeVariant = (stato: string) => {
+    switch (stato) {
+      case 'Previsto': return 'outline';
+      case 'Fatturato': return 'secondary';
+      case 'Incassato': return 'default';
+      case 'Pagato': return 'default';
+      case 'Annullato': return 'destructive';
+      default: return 'outline';
+    }
+  };
+
   if (isLoading) {
     return <div>Caricamento...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">progetti</h2>
-          <p className="text-muted-foreground">gestisci i progetti dello studio</p>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">progetti</h2>
+          <p className="text-muted-foreground text-sm">gestisci i progetti dello studio</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
+            <Button onClick={() => resetForm()} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               nuovo progetto
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{selectedProject ? "Modifica Progetto" : "Nuovo Progetto"}</DialogTitle>
               <DialogDescription>Inserisci i dettagli del progetto</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="codice">Codice</Label>
                   <Input
@@ -168,8 +207,8 @@ export default function Progetti() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Attivo">Attivo</SelectItem>
-                      <SelectItem value="In attesa">In attesa</SelectItem>
-                      <SelectItem value="Chiuso">Chiuso</SelectItem>
+                      <SelectItem value="In pausa">In pausa</SelectItem>
+                      <SelectItem value="Terminato">Terminato</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -192,7 +231,7 @@ export default function Progetti() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="budget_totale">Budget Totale (€)</Label>
                   <Input
@@ -216,7 +255,7 @@ export default function Progetti() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="data_inizio">Data Inizio</Label>
                   <Input
@@ -260,54 +299,58 @@ export default function Progetti() {
         </Dialog>
       </div>
 
-      {/* Search */}
-      <Input
-        placeholder="cerca per codice, nome o cliente..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="max-w-sm"
-      />
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Input
+          placeholder="cerca per codice, nome o cliente..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="sm:max-w-sm"
+        />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="sm:w-40">
+            <SelectValue placeholder="Stato" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutti</SelectItem>
+            <SelectItem value="Attivo">Attivo</SelectItem>
+            <SelectItem value="In pausa">In pausa</SelectItem>
+            <SelectItem value="Terminato">Terminato</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* Projects Table */}
-      <div className="border border-border">
-        <div className="grid grid-cols-12 gap-4 p-4 font-bold bg-secondary">
-          <div className="col-span-1">codice</div>
-          <div className="col-span-2">nome</div>
-          <div className="col-span-2">cliente</div>
-          <div className="col-span-1">stato</div>
-          <div className="col-span-2">budget</div>
-          <div className="col-span-2">costi stim.</div>
-          <div className="col-span-1">probab.</div>
-          <div className="col-span-1">azioni</div>
-        </div>
+      {/* Projects List - Mobile Cards */}
+      <div className="space-y-4 lg:hidden">
         {filteredProjects?.map((project) => (
-          <div key={project.id} className="grid grid-cols-12 gap-4 p-4 border-t border-border items-center">
-            <div className="col-span-1 font-mono font-bold">{project.codice}</div>
-            <div className="col-span-2">{project.nome}</div>
-            <div className="col-span-2">{project.cliente}</div>
-            <div className="col-span-1">
-              <Badge variant={project.stato === 'Attivo' ? 'default' : 'secondary'}>
-                {project.stato}
-              </Badge>
-            </div>
-            <div className="col-span-2">{formatCurrency(project.budget_totale)}</div>
-            <div className="col-span-2">{formatCurrency(project.costi_stimati)}</div>
-            <div className="col-span-1">{project.probabilita}%</div>
-            <div className="col-span-1 flex gap-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
+          <Card key={project.id}>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <p className="font-mono font-bold text-sm">{project.codice}</p>
+                  <p className="font-medium">{project.nome}</p>
+                  <p className="text-sm text-muted-foreground">{project.cliente}</p>
+                </div>
+                <Badge variant={project.stato === 'Attivo' ? 'default' : 'secondary'}>
+                  {project.stato}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                <div>
+                  <span className="text-muted-foreground">Budget:</span> {formatCurrency(project.budget_totale)}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Prob:</span> {project.probabilita}%
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => {
                   setSelectedProject(project);
                   setDetailOpen(true);
-                }}
-              >
-                <Eye className="h-3 w-3" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
+                }}>
+                  <Eye className="h-3 w-3 mr-1" /> dettagli
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => {
                   setSelectedProject(project);
                   setFormData({
                     codice: project.codice,
@@ -321,24 +364,83 @@ export default function Progetti() {
                     probabilita: String(project.probabilita),
                   });
                   setDialogOpen(true);
-                }}
-              >
-                <Edit2 className="h-3 w-3" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
+                }}>
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => {
                   if (confirm("Eliminare questo progetto?")) {
                     deleteProject.mutate(project.id);
                   }
-                }}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
+                }}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ))}
+      </div>
+
+      {/* Projects Table - Desktop */}
+      <div className="border border-border hidden lg:block overflow-x-auto">
+        <div className="min-w-[800px]">
+          <div className="grid grid-cols-12 gap-4 p-4 font-bold bg-secondary text-sm">
+            <div className="col-span-1">codice</div>
+            <div className="col-span-2">nome</div>
+            <div className="col-span-2">cliente</div>
+            <div className="col-span-1">stato</div>
+            <div className="col-span-2">budget</div>
+            <div className="col-span-2">costi stim.</div>
+            <div className="col-span-1">prob.</div>
+            <div className="col-span-1">azioni</div>
+          </div>
+          {filteredProjects?.map((project) => (
+            <div key={project.id} className="grid grid-cols-12 gap-4 p-4 border-t border-border items-center text-sm">
+              <div className="col-span-1 font-mono font-bold truncate">{project.codice}</div>
+              <div className="col-span-2 truncate">{project.nome}</div>
+              <div className="col-span-2 truncate">{project.cliente}</div>
+              <div className="col-span-1">
+                <Badge variant={project.stato === 'Attivo' ? 'default' : 'secondary'} className="text-xs">
+                  {project.stato}
+                </Badge>
+              </div>
+              <div className="col-span-2">{formatCurrency(project.budget_totale)}</div>
+              <div className="col-span-2">{formatCurrency(project.costi_stimati)}</div>
+              <div className="col-span-1">{project.probabilita}%</div>
+              <div className="col-span-1 flex gap-1">
+                <Button size="sm" variant="ghost" onClick={() => {
+                  setSelectedProject(project);
+                  setDetailOpen(true);
+                }}>
+                  <Eye className="h-3 w-3" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => {
+                  setSelectedProject(project);
+                  setFormData({
+                    codice: project.codice,
+                    nome: project.nome,
+                    cliente: project.cliente,
+                    stato: project.stato,
+                    budget_totale: String(project.budget_totale),
+                    costi_stimati: String(project.costi_stimati),
+                    data_inizio: project.data_inizio,
+                    data_fine: project.data_fine || "",
+                    probabilita: String(project.probabilita),
+                  });
+                  setDialogOpen(true);
+                }}>
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => {
+                  if (confirm("Eliminare questo progetto?")) {
+                    deleteProject.mutate(project.id);
+                  }
+                }}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Project Detail Dialog */}
@@ -356,10 +458,10 @@ export default function Progetti() {
               {/* Project Info */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Informazioni Progetto</CardTitle>
+                  <CardTitle className="text-base">Informazioni Progetto</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="font-medium">Cliente:</span> {selectedProject.cliente}
                     </div>
@@ -382,32 +484,28 @@ export default function Progetti() {
               {fasi && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Totali</CardTitle>
+                    <CardTitle className="text-base">Totali</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {(() => {
                       const totals = calculateTotals(fasi);
                       return (
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                           <div>
-                            <p className="text-sm text-muted-foreground">Ricavi Effettivi</p>
-                            <p className="text-2xl font-bold">{formatCurrency(totals.ricaviEffettivi)}</p>
+                            <p className="text-xs text-muted-foreground">Ricavi Eff.</p>
+                            <p className="text-lg font-bold">{formatCurrency(totals.ricaviEffettivi)}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-muted-foreground">Ricavi Previsti</p>
-                            <p className="text-2xl font-bold">{formatCurrency(totals.ricaviPrevisti)}</p>
+                            <p className="text-xs text-muted-foreground">Ricavi Prev.</p>
+                            <p className="text-lg font-bold">{formatCurrency(totals.ricaviPrevisti)}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-muted-foreground">Costi Effettivi</p>
-                            <p className="text-2xl font-bold">{formatCurrency(totals.costiEffettivi)}</p>
+                            <p className="text-xs text-muted-foreground">Costi Eff.</p>
+                            <p className="text-lg font-bold">{formatCurrency(totals.costiEffettivi)}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-muted-foreground">Costi Previsti</p>
-                            <p className="text-2xl font-bold">{formatCurrency(totals.costiPrevisti)}</p>
-                          </div>
-                          <div className="col-span-2">
-                            <p className="text-sm text-muted-foreground">Margine (Ricavi - Costi)</p>
-                            <p className="text-3xl font-bold">{formatCurrency(totals.margine)}</p>
+                            <p className="text-xs text-muted-foreground">Margine</p>
+                            <p className="text-lg font-bold">{formatCurrency(totals.margine)}</p>
                           </div>
                         </div>
                       );
@@ -420,7 +518,7 @@ export default function Progetti() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>Fasi del Progetto</CardTitle>
+                    <CardTitle className="text-base">Fasi del Progetto</CardTitle>
                     <Dialog open={faseDialogOpen} onOpenChange={setFaseDialogOpen}>
                       <DialogTrigger asChild>
                         <Button size="sm" onClick={resetFaseForm}>
@@ -428,15 +526,14 @@ export default function Progetti() {
                           Aggiungi Fase
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                          <DialogTitle>Nuova Fase</DialogTitle>
+                          <DialogTitle>{selectedFase ? "Modifica Fase" : "Nuova Fase"}</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleFaseSubmit} className="space-y-4">
                           <div>
-                            <Label htmlFor="fase">Nome Fase</Label>
+                            <Label>Nome Fase</Label>
                             <Input
-                              id="fase"
                               value={faseFormData.fase}
                               onChange={(e) => setFaseFormData({ ...faseFormData, fase: e.target.value })}
                               placeholder="es. Acconto, SAL, Saldo"
@@ -445,7 +542,7 @@ export default function Progetti() {
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <Label htmlFor="tipo">Tipo</Label>
+                              <Label>Tipo</Label>
                               <Select value={faseFormData.tipo} onValueChange={(value) => setFaseFormData({ ...faseFormData, tipo: value })}>
                                 <SelectTrigger>
                                   <SelectValue />
@@ -457,9 +554,8 @@ export default function Progetti() {
                               </Select>
                             </div>
                             <div>
-                              <Label htmlFor="categoria">Categoria</Label>
+                              <Label>Categoria</Label>
                               <Input
-                                id="categoria"
                                 value={faseFormData.categoria}
                                 onChange={(e) => setFaseFormData({ ...faseFormData, categoria: e.target.value })}
                                 required
@@ -468,9 +564,8 @@ export default function Progetti() {
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <Label htmlFor="importo">Importo (€)</Label>
+                              <Label>Importo (€)</Label>
                               <Input
-                                id="importo"
                                 type="number"
                                 step="0.01"
                                 value={faseFormData.importo}
@@ -479,33 +574,61 @@ export default function Progetti() {
                               />
                             </div>
                             <div>
-                              <Label htmlFor="stato_fase">Stato</Label>
+                              <Label>Stato</Label>
                               <Select value={faseFormData.stato} onValueChange={(value) => setFaseFormData({ ...faseFormData, stato: value })}>
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="Previsto">Previsto</SelectItem>
+                                  <SelectItem value="Fatturato">Fatturato</SelectItem>
                                   <SelectItem value="Incassato">Incassato</SelectItem>
                                   <SelectItem value="Pagato">Pagato</SelectItem>
+                                  <SelectItem value="Annullato">Annullato</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
                           </div>
-                          <div>
-                            <Label htmlFor="data_prevista">Data Prevista</Label>
-                            <Input
-                              id="data_prevista"
-                              type="date"
-                              value={faseFormData.data_prevista}
-                              onChange={(e) => setFaseFormData({ ...faseFormData, data_prevista: e.target.value })}
-                              required
-                            />
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label>Data prev. fattura</Label>
+                              <Input
+                                type="date"
+                                value={faseFormData.data_prevista_fattura}
+                                onChange={(e) => setFaseFormData({ ...faseFormData, data_prevista_fattura: e.target.value })}
+                              />
+                            </div>
+                            <div>
+                              <Label>Data eff. fattura</Label>
+                              <Input
+                                type="date"
+                                value={faseFormData.data_effettiva_fattura}
+                                onChange={(e) => setFaseFormData({ ...faseFormData, data_effettiva_fattura: e.target.value })}
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label>Data prev. pagamento</Label>
+                              <Input
+                                type="date"
+                                value={faseFormData.data_prevista_pagamento}
+                                onChange={(e) => setFaseFormData({ ...faseFormData, data_prevista_pagamento: e.target.value })}
+                                required
+                              />
+                            </div>
+                            <div>
+                              <Label>Data eff. pagamento</Label>
+                              <Input
+                                type="date"
+                                value={faseFormData.data_effettiva_pagamento}
+                                onChange={(e) => setFaseFormData({ ...faseFormData, data_effettiva_pagamento: e.target.value })}
+                              />
+                            </div>
                           </div>
                           <div>
-                            <Label htmlFor="note">Note</Label>
+                            <Label>Note</Label>
                             <Input
-                              id="note"
                               value={faseFormData.note}
                               onChange={(e) => setFaseFormData({ ...faseFormData, note: e.target.value })}
                             />
@@ -527,52 +650,63 @@ export default function Progetti() {
                   ) : (
                     <div className="space-y-2">
                       {fasi.map((fase) => (
-                        <div key={fase.id} className="flex items-center justify-between border border-border p-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium">{fase.fase}</p>
-                              <Badge variant={fase.tipo === 'Ricavo' ? 'default' : 'secondary'}>
-                                {fase.tipo}
-                              </Badge>
-                              <Badge variant={fase.stato === 'Previsto' ? 'outline' : 'default'}>
-                                {fase.stato}
-                              </Badge>
+                        <div key={fase.id} className="border border-border p-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <p className="font-medium">{fase.fase}</p>
+                                <Badge variant={fase.tipo === 'Ricavo' ? 'default' : 'secondary'} className="text-xs">
+                                  {fase.tipo}
+                                </Badge>
+                                <Badge variant={getStatoBadgeVariant(fase.stato)} className="text-xs">
+                                  {fase.stato}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {fase.data_prevista_pagamento && `Pag. prev: ${formatDate(fase.data_prevista_pagamento)}`}
+                                {fase.data_effettiva_pagamento && ` | Pag. eff: ${formatDate(fase.data_effettiva_pagamento)}`}
+                                {!fase.data_prevista_pagamento && formatDate(fase.data_prevista)}
+                                {' · '}{fase.categoria}
+                              </p>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              {formatDate(fase.data_prevista)} · {fase.categoria}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-bold">{formatCurrency(fase.importo)}</p>
-                            {fase.stato === 'Previsto' && fase.tipo === 'Ricavo' && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => markAsIncassato.mutate(fase.id)}
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold">{formatCurrency(fase.importo)}</p>
+                              {fase.stato === 'Previsto' && fase.tipo === 'Ricavo' && (
+                                <Button size="sm" variant="ghost" onClick={() => markAsIncassato.mutate(fase.id)} title="Segna incassato">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {fase.stato === 'Previsto' && fase.tipo === 'Costo' && (
+                                <Button size="sm" variant="ghost" onClick={() => markAsPagato.mutate(fase.id)} title="Segna pagato">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button size="sm" variant="ghost" onClick={() => {
+                                setSelectedFase(fase);
+                                setFaseFormData({
+                                  fase: fase.fase,
+                                  tipo: fase.tipo,
+                                  categoria: fase.categoria,
+                                  importo: String(fase.importo),
+                                  stato: fase.stato,
+                                  data_prevista_fattura: fase.data_prevista_fattura || "",
+                                  data_effettiva_fattura: fase.data_effettiva_fattura || "",
+                                  data_prevista_pagamento: fase.data_prevista_pagamento || fase.data_prevista || "",
+                                  data_effettiva_pagamento: fase.data_effettiva_pagamento || fase.data_effettiva || "",
+                                  note: fase.note || "",
+                                });
+                                setFaseDialogOpen(true);
+                              }}>
+                                <Edit2 className="h-3 w-3" />
                               </Button>
-                            )}
-                            {fase.stato === 'Previsto' && fase.tipo === 'Costo' && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => markAsPagato.mutate(fase.id)}
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
+                              <Button size="sm" variant="ghost" onClick={() => {
                                 if (confirm("Eliminare questa fase?")) {
                                   deleteFase.mutate(fase.id);
                                 }
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                              }}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}

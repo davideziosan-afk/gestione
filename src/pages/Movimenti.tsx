@@ -2,29 +2,61 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { useFasiProgetto } from "@/hooks/useFasiProgetto";
-import { useMovimentiFissi } from "@/hooks/useCostiFissi";
+import { useMovimentiFissi, useCostiFissi, useCreateCostoFisso, useGenerateMovimentiFissi, useMarkMovimentoAsPagato } from "@/hooks/useCostiFissi";
 import { formatCurrency, formatDate } from "@/lib/dateUtils";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
+import { Plus, CheckCircle2, RefreshCw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Movimenti() {
   const { data: fasi } = useFasiProgetto();
   const { data: movimentiFissi } = useMovimentiFissi();
+  const { data: costiFissi } = useCostiFissi();
+  const createCostoFisso = useCreateCostoFisso();
+  const generateMovimenti = useGenerateMovimentiFissi();
+  const markAsPagato = useMarkMovimentoAsPagato();
 
   const [filters, setFilters] = useState({
     search: "",
     stato: "all",
     tipo: "all",
+    tipoMovimento: "all",
   });
 
-  // Combine both types of movements
+  const [costoDialogOpen, setCostoDialogOpen] = useState(false);
+  const [costoForm, setCostoForm] = useState({
+    voce: "",
+    importo_mensile: "",
+    giorno_scadenza: "1",
+    categoria: "",
+    note: "",
+  });
+
+  const handleCostoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await createCostoFisso.mutateAsync({
+      voce: costoForm.voce,
+      importo_mensile: parseFloat(costoForm.importo_mensile),
+      giorno_scadenza: parseInt(costoForm.giorno_scadenza),
+      categoria: costoForm.categoria,
+      note: costoForm.note || null,
+    });
+    setCostoDialogOpen(false);
+    setCostoForm({ voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "" });
+  };
+
+  // Combine all movements
   const allMovimenti = [
     ...(fasi?.map(f => ({
       ...f,
       tipo_movimento: 'progetto',
       direzione: f.tipo === 'Ricavo' ? 'Entrata' : 'Uscita',
       nome: (f.progetti as any)?.nome || '-',
+      is_fisso: false,
     })) || []),
     ...(movimentiFissi?.map(m => ({
       ...m,
@@ -33,6 +65,7 @@ export default function Movimenti() {
       tipo: 'Costo',
       fase: m.note,
       nome: '-',
+      is_fisso: true,
     })) || [])
   ];
 
@@ -51,101 +84,300 @@ export default function Movimenti() {
     })
     .filter(m => filters.stato === 'all' || m.stato === filters.stato)
     .filter(m => filters.tipo === 'all' || m.direzione === filters.tipo)
+    .filter(m => {
+      if (filters.tipoMovimento === 'all') return true;
+      if (filters.tipoMovimento === 'fisso') return m.is_fisso;
+      if (filters.tipoMovimento === 'progetto') return m.tipo_movimento === 'progetto';
+      return true;
+    })
     .sort((a, b) => new Date(b.data_prevista).getTime() - new Date(a.data_prevista).getTime());
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">movimenti</h2>
-          <p className="text-muted-foreground">tutti i movimenti finanziari (progetti + costi fissi)</p>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">movimenti</h2>
+          <p className="text-muted-foreground text-sm">tutti i movimenti finanziari</p>
         </div>
+      </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>filtri</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label>cerca</Label>
-              <Input
-                placeholder="cerca per nome, categoria..."
-                value={filters.search}
-                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>stato</Label>
-              <Select value={filters.stato} onValueChange={(value) => setFilters({ ...filters, stato: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutti</SelectItem>
-                  <SelectItem value="Previsto">Previsto</SelectItem>
-                  <SelectItem value="Incassato">Incassato</SelectItem>
-                  <SelectItem value="Pagato">Pagato</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>tipo</Label>
-              <Select value={filters.tipo} onValueChange={(value) => setFilters({ ...filters, tipo: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutti</SelectItem>
-                  <SelectItem value="Entrata">Entrata</SelectItem>
-                  <SelectItem value="Uscita">Uscita</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="tutti">
+        <TabsList className="mb-4 flex-wrap h-auto">
+          <TabsTrigger value="tutti">tutti</TabsTrigger>
+          <TabsTrigger value="costi-fissi">costi fissi</TabsTrigger>
+        </TabsList>
 
-      {/* Results */}
-      <Card>
-        <CardHeader>
-          <CardTitle>risultati ({filteredMovimenti.length})</CardTitle>
-          <CardDescription>movimenti filtrati</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {filteredMovimenti.length === 0 ? (
-            <p className="text-sm text-muted-foreground">nessun movimento trovato</p>
-          ) : (
-            <div className="space-y-2">
-              {filteredMovimenti.map((movimento, idx) => (
-                <div key={`${movimento.tipo_movimento}-${movimento.id}`} className="flex items-center justify-between border border-border p-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{movimento.fase || movimento.note}</p>
-                      <Badge variant={movimento.direzione === 'Entrata' ? 'default' : 'secondary'}>
-                        {movimento.direzione}
-                      </Badge>
-                      <Badge variant={movimento.stato === 'Previsto' ? 'outline' : 'default'}>
-                        {movimento.stato}
-                      </Badge>
-                      <Badge variant="outline">{movimento.tipo_movimento === 'progetto' ? 'Progetto' : 'Costo Fisso'}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(movimento.data_prevista)}
-                      {movimento.data_effettiva && ` → ${formatDate(movimento.data_effettiva)}`}
-                      {' · '}{movimento.categoria}
-                      {movimento.tipo_movimento === 'progetto' && movimento.nome !== '-' && ` · ${movimento.nome}`}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">{formatCurrency(movimento.importo)}</p>
-                  </div>
+        <TabsContent value="tutti">
+          {/* Filters */}
+          <Card className="mb-4">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">filtri</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <Label className="text-xs">cerca</Label>
+                  <Input
+                    placeholder="cerca..."
+                    value={filters.search}
+                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  />
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <div>
+                  <Label className="text-xs">stato</Label>
+                  <Select value={filters.stato} onValueChange={(value) => setFilters({ ...filters, stato: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tutti</SelectItem>
+                      <SelectItem value="Previsto">Previsto</SelectItem>
+                      <SelectItem value="Fatturato">Fatturato</SelectItem>
+                      <SelectItem value="Incassato">Incassato</SelectItem>
+                      <SelectItem value="Pagato">Pagato</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">direzione</Label>
+                  <Select value={filters.tipo} onValueChange={(value) => setFilters({ ...filters, tipo: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tutti</SelectItem>
+                      <SelectItem value="Entrata">Entrata</SelectItem>
+                      <SelectItem value="Uscita">Uscita</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">tipo</Label>
+                  <Select value={filters.tipoMovimento} onValueChange={(value) => setFilters({ ...filters, tipoMovimento: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tutti</SelectItem>
+                      <SelectItem value="progetto">Progetto</SelectItem>
+                      <SelectItem value="fisso">Costo Fisso</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Results */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">risultati ({filteredMovimenti.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {filteredMovimenti.length === 0 ? (
+                <p className="text-sm text-muted-foreground">nessun movimento trovato</p>
+              ) : (
+                <div className="space-y-2">
+                  {filteredMovimenti.map((movimento) => (
+                    <div key={`${movimento.tipo_movimento}-${movimento.id}`} className="border border-border p-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <p className="font-medium text-sm truncate">{movimento.fase || movimento.note}</p>
+                            <Badge variant={movimento.direzione === 'Entrata' ? 'default' : 'secondary'} className="text-xs">
+                              {movimento.direzione}
+                            </Badge>
+                            <Badge variant={movimento.stato === 'Previsto' ? 'outline' : 'default'} className="text-xs">
+                              {movimento.stato}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {movimento.is_fisso ? 'Fisso' : 'Progetto'}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(movimento.data_prevista)}
+                            {movimento.data_effettiva && ` → ${formatDate(movimento.data_effettiva)}`}
+                            {' · '}{movimento.categoria}
+                            {movimento.tipo_movimento === 'progetto' && movimento.nome !== '-' && ` · ${movimento.nome}`}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold">{formatCurrency(movimento.importo)}</p>
+                          {movimento.is_fisso && movimento.stato === 'Previsto' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => markAsPagato.mutate(movimento.id)}
+                              title="Segna pagato"
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="costi-fissi">
+          {/* Costi Fissi Management */}
+          <Card className="mb-4">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base">definizioni costi fissi</CardTitle>
+                  <CardDescription className="text-xs">costi ricorrenti mensili</CardDescription>
+                </div>
+                <Dialog open={costoDialogOpen} onOpenChange={setCostoDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      nuovo costo fisso
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Nuovo Costo Fisso</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleCostoSubmit} className="space-y-4">
+                      <div>
+                        <Label>Voce</Label>
+                        <Input
+                          value={costoForm.voce}
+                          onChange={(e) => setCostoForm({ ...costoForm, voce: e.target.value })}
+                          placeholder="es. Affitto, Utenze..."
+                          required
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Importo Mensile (€)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={costoForm.importo_mensile}
+                            onChange={(e) => setCostoForm({ ...costoForm, importo_mensile: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label>Giorno Scadenza</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            max="31"
+                            value={costoForm.giorno_scadenza}
+                            onChange={(e) => setCostoForm({ ...costoForm, giorno_scadenza: e.target.value })}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Categoria</Label>
+                        <Input
+                          value={costoForm.categoria}
+                          onChange={(e) => setCostoForm({ ...costoForm, categoria: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label>Note</Label>
+                        <Input
+                          value={costoForm.note}
+                          onChange={(e) => setCostoForm({ ...costoForm, note: e.target.value })}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="secondary" onClick={() => setCostoDialogOpen(false)}>
+                          Annulla
+                        </Button>
+                        <Button type="submit">Salva</Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {!costiFissi || costiFissi.length === 0 ? (
+                <p className="text-sm text-muted-foreground">nessun costo fisso definito</p>
+              ) : (
+                <div className="space-y-2">
+                  {costiFissi.map((costo) => (
+                    <div key={costo.id} className="flex flex-col sm:flex-row sm:items-center justify-between border border-border p-3 gap-2">
+                      <div>
+                        <p className="font-medium text-sm">{costo.voce}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatCurrency(costo.importo_mensile)}/mese · scadenza giorno {costo.giorno_scadenza} · {costo.categoria}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => generateMovimenti.mutate(costo.id)}
+                        disabled={generateMovimenti.isPending}
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        genera 12 mesi
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Generated Movements */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">movimenti generati</CardTitle>
+              <CardDescription className="text-xs">istanze mensili dei costi fissi</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!movimentiFissi || movimentiFissi.length === 0 ? (
+                <p className="text-sm text-muted-foreground">nessun movimento generato</p>
+              ) : (
+                <div className="space-y-2">
+                  {movimentiFissi.map((mov) => (
+                    <div key={mov.id} className="flex flex-col sm:flex-row sm:items-center justify-between border border-border p-3 gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{mov.note}</p>
+                          <Badge variant={mov.stato === 'Previsto' ? 'outline' : 'default'} className="text-xs">
+                            {mov.stato}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(mov.data_prevista)}
+                          {mov.data_effettiva && ` → ${formatDate(mov.data_effettiva)}`}
+                          {' · '}{mov.categoria}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold">{formatCurrency(mov.importo)}</p>
+                        {mov.stato === 'Previsto' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => markAsPagato.mutate(mov.id)}
+                            title="Segna pagato"
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

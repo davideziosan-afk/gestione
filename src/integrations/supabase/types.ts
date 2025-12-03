@@ -224,6 +224,7 @@ export type Database = {
           importo: number
           mese: string
           note: string | null
+          progetto_id: string | null
           stato: Database["public"]["Enums"]["stato_movimento"]
           tipo_uscita: string
           updated_at: string
@@ -239,6 +240,7 @@ export type Database = {
           importo: number
           mese: string
           note?: string | null
+          progetto_id?: string | null
           stato?: Database["public"]["Enums"]["stato_movimento"]
           tipo_uscita?: string
           updated_at?: string
@@ -254,6 +256,7 @@ export type Database = {
           importo?: number
           mese?: string
           note?: string | null
+          progetto_id?: string | null
           stato?: Database["public"]["Enums"]["stato_movimento"]
           tipo_uscita?: string
           updated_at?: string
@@ -271,6 +274,13 @@ export type Database = {
             columns: ["costo_fisso_id"]
             isOneToOne: false
             referencedRelation: "costi_fissi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimenti_fissi_progetto_id_fkey"
+            columns: ["progetto_id"]
+            isOneToOne: false
+            referencedRelation: "progetti"
             referencedColumns: ["id"]
           },
         ]

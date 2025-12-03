@@ -166,6 +166,7 @@ export function useCreateMovimentoUnaTantum() {
       data_prevista: string;
       categoria: string;
       note?: string;
+      progetto_id?: string;
     }) => {
       // We'll use movimenti_fissi with tipo_uscita = 'una_tantum' and a dummy costo_fisso_id
       // First create a temporary costo_fisso entry
@@ -196,6 +197,7 @@ export function useCreateMovimentoUnaTantum() {
           categoria: movimento.categoria,
           note: movimento.descrizione,
           tipo_uscita: "una_tantum",
+          progetto_id: movimento.progetto_id || null,
         })
         .select()
         .single();
@@ -210,6 +212,24 @@ export function useCreateMovimentoUnaTantum() {
     onError: (error: any) => {
       toast.error("Errore: " + error.message);
     },
+  });
+}
+
+export function useMovimentiFissiByProgetto(progettoId?: string) {
+  return useQuery({
+    queryKey: ["movimenti_fissi_progetto", progettoId],
+    queryFn: async () => {
+      if (!progettoId) return [];
+      const { data, error } = await supabase
+        .from("movimenti_fissi")
+        .select("*")
+        .eq("progetto_id", progettoId)
+        .order("data_prevista", { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!progettoId,
   });
 }
 

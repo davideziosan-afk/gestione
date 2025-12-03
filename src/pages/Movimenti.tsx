@@ -194,14 +194,14 @@ export default function Movimenti() {
               <div>
                 <Label>Progetto (opzionale)</Label>
                 <Select
-                  value={movimentoForm.progetto_id}
-                  onValueChange={(value) => setMovimentoForm({ ...movimentoForm, progetto_id: value })}
+                  value={movimentoForm.progetto_id || "none"}
+                  onValueChange={(value) => setMovimentoForm({ ...movimentoForm, progetto_id: value === "none" ? "" : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Nessun progetto" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nessun progetto</SelectItem>
+                    <SelectItem value="none">Nessun progetto</SelectItem>
                     {progettiAttivi.map((progetto) => (
                       <SelectItem key={progetto.id} value={progetto.id}>
                         {progetto.codice} - {progetto.nome}

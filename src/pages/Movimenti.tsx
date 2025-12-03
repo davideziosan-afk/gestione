@@ -51,6 +51,7 @@ export default function Movimenti() {
     categoria: "",
     note: "",
     progetto_id: "",
+    stato: "Previsto",
   });
 
   // Filter only active projects
@@ -78,9 +79,10 @@ export default function Movimenti() {
       categoria: movimentoForm.categoria,
       note: movimentoForm.note || undefined,
       progetto_id: movimentoForm.progetto_id || undefined,
+      stato: movimentoForm.stato as "Previsto" | "Pagato",
     });
     setMovimentoDialogOpen(false);
-    setMovimentoForm({ descrizione: "", importo: "", data_prevista: "", categoria: "", note: "", progetto_id: "" });
+    setMovimentoForm({ descrizione: "", importo: "", data_prevista: "", categoria: "", note: "", progetto_id: "", stato: "Previsto" });
   };
 
   // Combine all movements
@@ -207,6 +209,21 @@ export default function Movimenti() {
                         {progetto.codice} - {progetto.nome}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Stato</Label>
+                <Select
+                  value={movimentoForm.stato}
+                  onValueChange={(value) => setMovimentoForm({ ...movimentoForm, stato: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Previsto">Previsto</SelectItem>
+                    <SelectItem value="Pagato">Pagato</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

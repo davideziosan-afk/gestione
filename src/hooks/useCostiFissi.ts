@@ -167,6 +167,7 @@ export function useCreateMovimentoUnaTantum() {
       categoria: string;
       note?: string;
       progetto_id?: string;
+      stato?: "Previsto" | "Pagato";
     }) => {
       // We'll use movimenti_fissi with tipo_uscita = 'una_tantum' and a dummy costo_fisso_id
       // First create a temporary costo_fisso entry
@@ -185,6 +186,8 @@ export function useCreateMovimentoUnaTantum() {
       
       if (costoError) throw costoError;
       
+      const isPagato = movimento.stato === "Pagato";
+      
       // Then create the movimento
       const { data, error } = await supabase
         .from("movimenti_fissi")
@@ -193,11 +196,12 @@ export function useCreateMovimentoUnaTantum() {
           mese: movimento.data_prevista,
           data_prevista: movimento.data_prevista,
           importo: movimento.importo,
-          stato: "Previsto",
+          stato: movimento.stato || "Previsto",
           categoria: movimento.categoria,
           note: movimento.descrizione,
           tipo_uscita: "una_tantum",
           progetto_id: movimento.progetto_id || null,
+          data_effettiva: isPagato ? movimento.data_prevista : null,
         })
         .select()
         .single();

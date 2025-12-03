@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useProject } from "@/hooks/useProjects";
 import { useFasiProgetto } from "@/hooks/useFasiProgetto";
+import { useMovimentiFissiByProgetto } from "@/hooks/useCostiFissi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ export default function ProgettoDetail() {
   const navigate = useNavigate();
   const { data: project, isLoading: projectLoading } = useProject(id!);
   const { data: fasi, isLoading: fasiLoading } = useFasiProgetto(id);
+  const { data: movimentiFissiProgetto } = useMovimentiFissiByProgetto(id);
 
   if (projectLoading || fasiLoading) {
     return <div className="p-6">Caricamento...</div>;
@@ -22,7 +24,7 @@ export default function ProgettoDetail() {
     return <div className="p-6">Progetto non trovato</div>;
   }
 
-  // Calculate totals
+  // Calculate totals from fasi
   const ricaviIncassati = fasi?.filter(f => f.tipo === 'Ricavo' && f.stato === 'Incassato')
     .reduce((sum, f) => sum + parseFloat(String(f.importo)), 0) || 0;
   const ricaviPrevisti = fasi?.filter(f => f.tipo === 'Ricavo' && f.stato === 'Previsto')
@@ -30,10 +32,21 @@ export default function ProgettoDetail() {
   const ricaviFatturati = fasi?.filter(f => f.tipo === 'Ricavo' && f.stato === 'Fatturato')
     .reduce((sum, f) => sum + parseFloat(String(f.importo)), 0) || 0;
   
-  const costiPagati = fasi?.filter(f => f.tipo === 'Costo' && f.stato === 'Pagato')
+  // Costi da fasi progetto
+  const costiPagatiFasi = fasi?.filter(f => f.tipo === 'Costo' && f.stato === 'Pagato')
     .reduce((sum, f) => sum + parseFloat(String(f.importo)), 0) || 0;
-  const costiPrevisti = fasi?.filter(f => f.tipo === 'Costo' && f.stato === 'Previsto')
+  const costiPrevistiFasi = fasi?.filter(f => f.tipo === 'Costo' && f.stato === 'Previsto')
     .reduce((sum, f) => sum + parseFloat(String(f.importo)), 0) || 0;
+
+  // Costi da movimenti fissi associati al progetto
+  const costiPagatiMovimenti = movimentiFissiProgetto?.filter(m => m.stato === 'Pagato')
+    .reduce((sum, m) => sum + parseFloat(String(m.importo)), 0) || 0;
+  const costiPrevistiMovimenti = movimentiFissiProgetto?.filter(m => m.stato === 'Previsto')
+    .reduce((sum, m) => sum + parseFloat(String(m.importo)), 0) || 0;
+
+  // Totali costi (fasi + movimenti una tantum)
+  const costiPagati = costiPagatiFasi + costiPagatiMovimenti;
+  const costiPrevisti = costiPrevistiFasi + costiPrevistiMovimenti;
 
   const totaleRicavi = ricaviIncassati + ricaviPrevisti + ricaviFatturati;
   const totaleCosti = costiPagati + costiPrevisti;
@@ -222,6 +235,40 @@ export default function ProgettoDetail() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Movimenti Una Tantum associati */}
+      {movimentiFissiProgetto && movimentiFissiProgetto.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Costi Una Tantum</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {movimentiFissiProgetto.map(movimento => (
+                <div key={movimento.id} className="flex items-center justify-between p-3 border border-border rounded-md">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{movimento.note}</span>
+                      <Badge variant={movimento.stato === 'Pagato' ? 'default' : 'outline'} className="text-xs">
+                        {movimento.stato}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        Una Tantum
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {movimento.data_effettiva ? formatDate(movimento.data_effettiva) : formatDate(movimento.data_prevista)} • {movimento.categoria}
+                    </p>
+                  </div>
+                  <span className="font-bold text-chart-4">
+                    -{formatCurrency(movimento.importo)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

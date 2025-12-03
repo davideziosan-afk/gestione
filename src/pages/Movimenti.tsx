@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { useFasiProgetto, useDeleteFase, useMarkAsIncassato, useMarkAsPagato as useMarkFaseAsPagato } from "@/hooks/useFasiProgetto";
 import { useMovimentiFissi, useCostiFissi, useCreateCostoFisso, useGenerateMovimentiFissi, useMarkMovimentoAsPagato, useDeleteCostoFisso, useDeleteMovimentoFisso, useCreateMovimentoUnaTantum } from "@/hooks/useCostiFissi";
+import { useProjects } from "@/hooks/useProjects";
 import { formatCurrency, formatDate } from "@/lib/dateUtils";
 import { Badge } from "@/components/ui/badge";
 import { Plus, CheckCircle2, RefreshCw, Trash2 } from "lucide-react";
@@ -16,6 +17,7 @@ export default function Movimenti() {
   const { data: fasi } = useFasiProgetto();
   const { data: movimentiFissi } = useMovimentiFissi();
   const { data: costiFissi } = useCostiFissi();
+  const { data: progetti } = useProjects();
   const createCostoFisso = useCreateCostoFisso();
   const generateMovimenti = useGenerateMovimentiFissi();
   const markAsPagato = useMarkMovimentoAsPagato();
@@ -48,7 +50,11 @@ export default function Movimenti() {
     data_prevista: "",
     categoria: "",
     note: "",
+    progetto_id: "",
   });
+
+  // Filter only active projects
+  const progettiAttivi = progetti?.filter(p => p.stato === 'Attivo') || [];
 
   const handleCostoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,9 +77,10 @@ export default function Movimenti() {
       data_prevista: movimentoForm.data_prevista,
       categoria: movimentoForm.categoria,
       note: movimentoForm.note || undefined,
+      progetto_id: movimentoForm.progetto_id || undefined,
     });
     setMovimentoDialogOpen(false);
-    setMovimentoForm({ descrizione: "", importo: "", data_prevista: "", categoria: "", note: "" });
+    setMovimentoForm({ descrizione: "", importo: "", data_prevista: "", categoria: "", note: "", progetto_id: "" });
   };
 
   // Combine all movements
@@ -183,6 +190,25 @@ export default function Movimenti() {
                   value={movimentoForm.note}
                   onChange={(e) => setMovimentoForm({ ...movimentoForm, note: e.target.value })}
                 />
+              </div>
+              <div>
+                <Label>Progetto (opzionale)</Label>
+                <Select
+                  value={movimentoForm.progetto_id}
+                  onValueChange={(value) => setMovimentoForm({ ...movimentoForm, progetto_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Nessun progetto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nessun progetto</SelectItem>
+                    {progettiAttivi.map((progetto) => (
+                      <SelectItem key={progetto.id} value={progetto.id}>
+                        {progetto.codice} - {progetto.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setMovimentoDialogOpen(false)}>

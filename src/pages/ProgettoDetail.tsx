@@ -42,13 +42,13 @@ export default function ProgettoDetail() {
   const ricaviChartData = [
     { name: 'Incassato', value: ricaviIncassati, color: '#929699' },
     { name: 'Fatturato', value: ricaviFatturati, color: 'hsl(var(--chart-2))' },
-    { name: 'Previsto', value: ricaviPrevisti, color: '#090abd' },
+    { name: 'Previsto', value: ricaviPrevisti, color: '#90ABC9' },
   ].filter(d => d.value > 0);
 
   // Data for pie chart - costs
   const costiChartData = [
     { name: 'Pagato', value: costiPagati, color: '#929699' },
-    { name: 'Previsto', value: costiPrevisti, color: '#090abd' },
+    { name: 'Previsto', value: costiPrevisti, color: '#90ABC9' },
   ].filter(d => d.value > 0);
 
   // Progress percentage

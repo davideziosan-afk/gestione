@@ -9,7 +9,8 @@ import { useProjects, useCreateProject, useUpdateProject, useDeleteProject } fro
 import { useFasiProgetto, useCreateFase, useUpdateFase, useMarkAsIncassato, useMarkAsPagato, useDeleteFase } from "@/hooks/useFasiProgetto";
 import { useProjectCostsMap } from "@/hooks/useProjectCosts";
 import { formatCurrency, formatDate } from "@/lib/dateUtils";
-import { Plus, Edit2, Trash2, Eye, CheckCircle2, Box } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, CheckCircle2, Box, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
 // Generate project code: YYYY-NNN format
@@ -23,6 +24,7 @@ const generateProjectCode = (existingProjects: any[] | undefined) => {
   return `${currentYear}-${String(maxNumber + 1).padStart(3, '0')}`;
 };
 export default function Progetti() {
+  const navigate = useNavigate();
   const {
     data: progetti,
     isLoading
@@ -330,11 +332,14 @@ export default function Progetti() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => {
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/progetti/${project.id}`)}>
+                  <ExternalLink className="h-3 w-3 mr-1" /> apri
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => {
               setSelectedProject(project);
               setDetailOpen(true);
             }}>
-                  <Eye className="h-3 w-3 mr-1" /> dettagli
+                  <Eye className="h-3 w-3" />
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => {
               setSelectedProject(project);
@@ -395,6 +400,9 @@ export default function Progetti() {
               <div className="col-span-1">{formatCurrency(projectCosts.costiEffettivi)}</div>
               <div className="col-span-1">{project.probabilita}%</div>
               <div className="col-span-2 flex gap-1">
+                <Button size="sm" variant="ghost" onClick={() => navigate(`/progetti/${project.id}`)}>
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
                 <Button size="sm" variant="ghost" onClick={() => {
               setSelectedProject(project);
               setDetailOpen(true);

@@ -73,6 +73,7 @@ export type Database = {
           attivo: boolean
           categoria: string
           created_at: string
+          data_scadenza: string | null
           frequenza_mesi: number
           giorno_scadenza: number
           id: string
@@ -86,6 +87,7 @@ export type Database = {
           attivo?: boolean
           categoria: string
           created_at?: string
+          data_scadenza?: string | null
           frequenza_mesi?: number
           giorno_scadenza: number
           id?: string
@@ -99,6 +101,7 @@ export type Database = {
           attivo?: boolean
           categoria?: string
           created_at?: string
+          data_scadenza?: string | null
           frequenza_mesi?: number
           giorno_scadenza?: number
           id?: string

@@ -75,6 +75,7 @@ export default function Movimenti() {
     dilazionato: false,
     numero_rate: "2",
     giorno_rata: "1",
+    addebito_automatico: false,
   });
 
   const [editingMovimento, setEditingMovimento] = useState<{
@@ -137,9 +138,10 @@ export default function Movimenti() {
       dilazionato: movimentoForm.dilazionato,
       numero_rate: movimentoForm.dilazionato ? parseInt(movimentoForm.numero_rate) : undefined,
       giorno_rata: movimentoForm.dilazionato ? parseInt(movimentoForm.giorno_rata) : undefined,
+      addebito_automatico: movimentoForm.dilazionato ? movimentoForm.addebito_automatico : undefined,
     });
     setMovimentoDialogOpen(false);
-    setMovimentoForm({ descrizione: "", importo: "", data_prevista: "", categoria: "", note: "", progetto_id: "", stato: "Previsto", dilazionato: false, numero_rate: "2", giorno_rata: "1" });
+    setMovimentoForm({ descrizione: "", importo: "", data_prevista: "", categoria: "", note: "", progetto_id: "", stato: "Previsto", dilazionato: false, numero_rate: "2", giorno_rata: "1", addebito_automatico: false });
   };
 
   const handleEditMovimento = async (e: React.FormEvent) => {
@@ -384,6 +386,16 @@ export default function Movimenti() {
                     <p className="text-xs text-muted-foreground">
                       Importo per rata: €{(parseFloat(movimentoForm.importo || "0") / parseInt(movimentoForm.numero_rate || "2")).toFixed(2)}
                     </p>
+                  </div>
+                  <div className="col-span-2 flex items-center space-x-2">
+                    <Checkbox
+                      id="addebito_automatico"
+                      checked={movimentoForm.addebito_automatico}
+                      onCheckedChange={(checked) => setMovimentoForm({ ...movimentoForm, addebito_automatico: checked === true })}
+                    />
+                    <Label htmlFor="addebito_automatico" className="text-sm font-normal cursor-pointer">
+                      Addebito automatico (segna tutte le rate come pagate alla data prevista)
+                    </Label>
                   </div>
                 </div>
               )}

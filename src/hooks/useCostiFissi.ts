@@ -45,6 +45,7 @@ export function useCreateCostoFisso() {
       note?: string | null;
       frequenza_mesi?: number;
       pagamento_automatico?: boolean;
+      data_scadenza?: string | null;
     }) => {
       const { data, error } = await supabase
         .from("costi_fissi")
@@ -52,6 +53,7 @@ export function useCreateCostoFisso() {
           ...costo,
           frequenza_mesi: costo.frequenza_mesi || 1,
           pagamento_automatico: costo.pagamento_automatico || false,
+          data_scadenza: costo.data_scadenza || null,
         })
         .select()
         .single();
@@ -61,6 +63,7 @@ export function useCreateCostoFisso() {
       // Automatically generate 12 months of movements
       const frequenza = costo.frequenza_mesi || 1;
       const pagamentoAutomatico = costo.pagamento_automatico || false;
+      const dataScadenza = costo.data_scadenza ? new Date(costo.data_scadenza) : null;
       const movimenti = [];
       const today = new Date();
       
@@ -68,6 +71,11 @@ export function useCreateCostoFisso() {
         const mese = startOfMonth(addMonths(today, i));
         const dataPrevista = new Date(mese);
         dataPrevista.setDate(costo.giorno_scadenza);
+        
+        // Skip if past expiration date
+        if (dataScadenza && dataPrevista > dataScadenza) {
+          break;
+        }
         
         const dataPrevistaStr = dataPrevista.toISOString().split('T')[0];
         
@@ -115,6 +123,7 @@ export function useUpdateCostoFisso() {
       note?: string | null;
       frequenza_mesi?: number;
       pagamento_automatico?: boolean;
+      data_scadenza?: string | null;
     }) => {
       const { data, error } = await supabase
         .from("costi_fissi")

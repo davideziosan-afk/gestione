@@ -61,6 +61,7 @@ export default function Movimenti() {
     note: "",
     frequenza_mesi: "1",
     pagamento_automatico: false,
+    data_scadenza: "",
   });
   
   const [movimentoForm, setMovimentoForm] = useState({
@@ -97,9 +98,10 @@ export default function Movimenti() {
       note: costoForm.note || null,
       frequenza_mesi: parseInt(costoForm.frequenza_mesi),
       pagamento_automatico: costoForm.pagamento_automatico,
+      data_scadenza: costoForm.data_scadenza || null,
     });
     setCostoDialogOpen(false);
-    setCostoForm({ id: "", voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "", frequenza_mesi: "1", pagamento_automatico: false });
+    setCostoForm({ id: "", voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "", frequenza_mesi: "1", pagamento_automatico: false, data_scadenza: "" });
   };
 
   const handleCostoUpdate = async (e: React.FormEvent) => {
@@ -113,9 +115,10 @@ export default function Movimenti() {
       note: costoForm.note || null,
       frequenza_mesi: parseInt(costoForm.frequenza_mesi),
       pagamento_automatico: costoForm.pagamento_automatico,
+      data_scadenza: costoForm.data_scadenza || null,
     });
     setEditCostoDialogOpen(false);
-    setCostoForm({ id: "", voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "", frequenza_mesi: "1", pagamento_automatico: false });
+    setCostoForm({ id: "", voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "", frequenza_mesi: "1", pagamento_automatico: false, data_scadenza: "" });
   };
 
   const handleMovimentoSubmit = async (e: React.FormEvent) => {
@@ -186,6 +189,7 @@ export default function Movimenti() {
       note: costo.note || "",
       frequenza_mesi: String(costo.frequenza_mesi || 1),
       pagamento_automatico: costo.pagamento_automatico || false,
+      data_scadenza: costo.data_scadenza || "",
     });
     setEditCostoDialogOpen(true);
   };
@@ -691,6 +695,15 @@ export default function Movimenti() {
                           onChange={(e) => setCostoForm({ ...costoForm, note: e.target.value })}
                         />
                       </div>
+                      <div>
+                        <Label>Data Scadenza (opzionale)</Label>
+                        <Input
+                          type="date"
+                          value={costoForm.data_scadenza}
+                          onChange={(e) => setCostoForm({ ...costoForm, data_scadenza: e.target.value })}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">Lascia vuoto se il costo non ha una scadenza</p>
+                      </div>
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="pagamento_automatico"
@@ -831,6 +844,15 @@ export default function Movimenti() {
                     value={costoForm.note}
                     onChange={(e) => setCostoForm({ ...costoForm, note: e.target.value })}
                   />
+                </div>
+                <div>
+                  <Label>Data Scadenza (opzionale)</Label>
+                  <Input
+                    type="date"
+                    value={costoForm.data_scadenza}
+                    onChange={(e) => setCostoForm({ ...costoForm, data_scadenza: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Lascia vuoto se il costo non ha una scadenza</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox

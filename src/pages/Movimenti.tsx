@@ -72,6 +72,9 @@ export default function Movimenti() {
     note: "",
     progetto_id: "",
     stato: "Previsto",
+    dilazionato: false,
+    numero_rate: "2",
+    giorno_rata: "1",
   });
 
   const [editingMovimento, setEditingMovimento] = useState<{
@@ -131,9 +134,12 @@ export default function Movimenti() {
       note: movimentoForm.note || undefined,
       progetto_id: movimentoForm.progetto_id || undefined,
       stato: movimentoForm.stato as "Previsto" | "Pagato",
+      dilazionato: movimentoForm.dilazionato,
+      numero_rate: movimentoForm.dilazionato ? parseInt(movimentoForm.numero_rate) : undefined,
+      giorno_rata: movimentoForm.dilazionato ? parseInt(movimentoForm.giorno_rata) : undefined,
     });
     setMovimentoDialogOpen(false);
-    setMovimentoForm({ descrizione: "", importo: "", data_prevista: "", categoria: "", note: "", progetto_id: "", stato: "Previsto" });
+    setMovimentoForm({ descrizione: "", importo: "", data_prevista: "", categoria: "", note: "", progetto_id: "", stato: "Previsto", dilazionato: false, numero_rate: "2", giorno_rata: "1" });
   };
 
   const handleEditMovimento = async (e: React.FormEvent) => {
@@ -271,7 +277,7 @@ export default function Movimenti() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Importo (€)</Label>
+                  <Label>Importo Totale (€)</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -281,7 +287,7 @@ export default function Movimenti() {
                   />
                 </div>
                 <div>
-                  <Label>Data Prevista</Label>
+                  <Label>{movimentoForm.dilazionato ? "Data Prima Rata" : "Data Prevista"}</Label>
                   <Input
                     type="date"
                     value={movimentoForm.data_prevista}
@@ -326,7 +332,7 @@ export default function Movimenti() {
                 </Select>
               </div>
               <div>
-                <Label>Stato</Label>
+                <Label>Stato {movimentoForm.dilazionato ? "Prima Rata" : ""}</Label>
                 <Select
                   value={movimentoForm.stato}
                   onValueChange={(value) => setMovimentoForm({ ...movimentoForm, stato: value })}
@@ -340,6 +346,47 @@ export default function Movimenti() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="dilazionato"
+                  checked={movimentoForm.dilazionato}
+                  onCheckedChange={(checked) => setMovimentoForm({ ...movimentoForm, dilazionato: checked === true })}
+                />
+                <Label htmlFor="dilazionato" className="text-sm font-normal cursor-pointer">
+                  Costo dilazionato (suddiviso in rate)
+                </Label>
+              </div>
+              {movimentoForm.dilazionato && (
+                <div className="grid grid-cols-2 gap-4 p-3 bg-muted/50 rounded-md">
+                  <div>
+                    <Label>Numero Rate</Label>
+                    <Input
+                      type="number"
+                      min="2"
+                      max="60"
+                      value={movimentoForm.numero_rate}
+                      onChange={(e) => setMovimentoForm({ ...movimentoForm, numero_rate: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Giorno del Mese</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={movimentoForm.giorno_rata}
+                      onChange={(e) => setMovimentoForm({ ...movimentoForm, giorno_rata: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground">
+                      Importo per rata: €{(parseFloat(movimentoForm.importo || "0") / parseInt(movimentoForm.numero_rate || "2")).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setMovimentoDialogOpen(false)}>
                   Annulla

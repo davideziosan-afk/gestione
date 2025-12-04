@@ -273,6 +273,9 @@ export function useCreateMovimentoUnaTantum() {
       note?: string;
       progetto_id?: string;
       stato?: "Previsto" | "Pagato";
+      dilazionato?: boolean;
+      numero_rate?: number;
+      giorno_rata?: number;
     }) => {
       // We'll use movimenti_fissi with tipo_uscita = 'una_tantum' and a dummy costo_fisso_id
       // First create a temporary costo_fisso entry
@@ -281,7 +284,7 @@ export function useCreateMovimentoUnaTantum() {
         .insert({
           voce: movimento.descrizione,
           importo_mensile: movimento.importo,
-          giorno_scadenza: 1,
+          giorno_scadenza: movimento.giorno_rata || 1,
           categoria: movimento.categoria,
           note: movimento.note || null,
           attivo: false, // Mark as inactive since it's one-time
@@ -293,7 +296,44 @@ export function useCreateMovimentoUnaTantum() {
       
       const isPagato = movimento.stato === "Pagato";
       
-      // Then create the movimento
+      // Handle installment payments
+      if (movimento.dilazionato && movimento.numero_rate && movimento.numero_rate > 1) {
+        const importoRata = movimento.importo / movimento.numero_rate;
+        const movimenti = [];
+        const dataInizio = new Date(movimento.data_prevista);
+        const giornoRata = movimento.giorno_rata || dataInizio.getDate();
+        
+        for (let i = 0; i < movimento.numero_rate; i++) {
+          const dataPrevista = new Date(dataInizio);
+          dataPrevista.setMonth(dataPrevista.getMonth() + i);
+          dataPrevista.setDate(giornoRata);
+          
+          const dataPrevistaStr = dataPrevista.toISOString().split('T')[0];
+          const isFirstRata = i === 0;
+          
+          movimenti.push({
+            costo_fisso_id: costoFisso.id,
+            mese: dataPrevistaStr,
+            data_prevista: dataPrevistaStr,
+            importo: Math.round(importoRata * 100) / 100,
+            stato: (isFirstRata && isPagato) ? "Pagato" : "Previsto",
+            categoria: movimento.categoria,
+            note: `${movimento.descrizione} (rata ${i + 1}/${movimento.numero_rate})`,
+            tipo_uscita: "una_tantum",
+            progetto_id: movimento.progetto_id || null,
+            data_effettiva: (isFirstRata && isPagato) ? dataPrevistaStr : null,
+          });
+        }
+        
+        const { error } = await supabase
+          .from("movimenti_fissi")
+          .insert(movimenti);
+        
+        if (error) throw error;
+        return movimenti;
+      }
+      
+      // Single payment (no installments)
       const { data, error } = await supabase
         .from("movimenti_fissi")
         .insert({
@@ -316,7 +356,7 @@ export function useCreateMovimentoUnaTantum() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["movimenti_fissi"] });
-      toast.success("Movimento creato con successo");
+      toast.success("Costo creato con successo");
     },
     onError: (error: any) => {
       toast.error("Errore: " + error.message);

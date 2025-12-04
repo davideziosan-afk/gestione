@@ -248,12 +248,12 @@ export default function Movimenti() {
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              nuovo movimento
+              nuovo costo
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Nuovo Movimento Una Tantum</DialogTitle>
+              <DialogTitle>Nuovo Costo</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleMovimentoSubmit} className="space-y-4">
               <div>

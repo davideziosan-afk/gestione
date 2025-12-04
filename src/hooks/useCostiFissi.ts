@@ -44,12 +44,14 @@ export function useCreateCostoFisso() {
       categoria: string;
       note?: string | null;
       frequenza_mesi?: number;
+      pagamento_automatico?: boolean;
     }) => {
       const { data, error } = await supabase
         .from("costi_fissi")
         .insert({
           ...costo,
           frequenza_mesi: costo.frequenza_mesi || 1,
+          pagamento_automatico: costo.pagamento_automatico || false,
         })
         .select()
         .single();
@@ -79,6 +81,7 @@ export function useUpdateCostoFisso() {
       categoria?: string;
       note?: string | null;
       frequenza_mesi?: number;
+      pagamento_automatico?: boolean;
     }) => {
       const { data, error } = await supabase
         .from("costi_fissi")
@@ -115,6 +118,7 @@ export function useGenerateMovimentiFissi() {
       if (costoError) throw costoError;
       
       const frequenza = (costo as any).frequenza_mesi || 1;
+      const pagamentoAutomatico = (costo as any).pagamento_automatico || false;
       const movimenti = [];
       const today = new Date();
       
@@ -124,12 +128,15 @@ export function useGenerateMovimentiFissi() {
         const dataPrevista = new Date(mese);
         dataPrevista.setDate(costo.giorno_scadenza);
         
+        const dataPrevistaStr = dataPrevista.toISOString().split('T')[0];
+        
         movimenti.push({
           costo_fisso_id: costo.id,
           mese: mese.toISOString().split('T')[0],
-          data_prevista: dataPrevista.toISOString().split('T')[0],
+          data_prevista: dataPrevistaStr,
           importo: costo.importo_mensile,
-          stato: "Previsto",
+          stato: pagamentoAutomatico ? "Pagato" : "Previsto",
+          data_effettiva: pagamentoAutomatico ? dataPrevistaStr : null,
           categoria: costo.categoria,
           note: costo.voce,
         });

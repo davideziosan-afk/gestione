@@ -454,7 +454,7 @@ export default function Movimenti() {
       <Tabs defaultValue="tutti">
         <TabsList className="mb-4 flex-wrap h-auto">
           <TabsTrigger value="tutti">tutti</TabsTrigger>
-          <TabsTrigger value="costi-fissi">costi fissi</TabsTrigger>
+          <TabsTrigger value="costi-fissi">uscite</TabsTrigger>
         </TabsList>
 
         <TabsContent value="tutti">
@@ -611,7 +611,7 @@ export default function Movimenti() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base">definizioni costi fissi</CardTitle>
+                  <CardTitle className="text-base">costi fissi</CardTitle>
                   <CardDescription className="text-xs">costi ricorrenti</CardDescription>
                 </div>
                 <Dialog open={costoDialogOpen} onOpenChange={setCostoDialogOpen}>
@@ -857,12 +857,12 @@ export default function Movimenti() {
           {/* Generated Movements */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">movimenti generati</CardTitle>
-              <CardDescription className="text-xs">istanze dei costi fissi</CardDescription>
+              <CardTitle className="text-base">costi</CardTitle>
+              <CardDescription className="text-xs">tutti i costi (fissi e una tantum)</CardDescription>
             </CardHeader>
             <CardContent>
               {!movimentiFissi || movimentiFissi.length === 0 ? (
-                <p className="text-sm text-muted-foreground">nessun movimento generato</p>
+                <p className="text-sm text-muted-foreground">nessun costo presente</p>
               ) : (
                 <div className="space-y-2">
                   {movimentiFissi.map((mov) => (

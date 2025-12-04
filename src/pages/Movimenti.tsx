@@ -10,7 +10,8 @@ import { useMovimentiFissi, useCostiFissi, useCreateCostoFisso, useGenerateMovim
 import { useProjects } from "@/hooks/useProjects";
 import { formatCurrency, formatDate } from "@/lib/dateUtils";
 import { Badge } from "@/components/ui/badge";
-import { Plus, CheckCircle2, RefreshCw, Trash2, Pencil } from "lucide-react";
+import { Plus, CheckCircle2, RefreshCw, Trash2, Pencil, CreditCard } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FREQUENZE = [
@@ -59,6 +60,7 @@ export default function Movimenti() {
     categoria: "",
     note: "",
     frequenza_mesi: "1",
+    pagamento_automatico: false,
   });
   
   const [movimentoForm, setMovimentoForm] = useState({
@@ -94,9 +96,10 @@ export default function Movimenti() {
       categoria: costoForm.categoria,
       note: costoForm.note || null,
       frequenza_mesi: parseInt(costoForm.frequenza_mesi),
+      pagamento_automatico: costoForm.pagamento_automatico,
     });
     setCostoDialogOpen(false);
-    setCostoForm({ id: "", voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "", frequenza_mesi: "1" });
+    setCostoForm({ id: "", voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "", frequenza_mesi: "1", pagamento_automatico: false });
   };
 
   const handleCostoUpdate = async (e: React.FormEvent) => {
@@ -109,9 +112,10 @@ export default function Movimenti() {
       categoria: costoForm.categoria,
       note: costoForm.note || null,
       frequenza_mesi: parseInt(costoForm.frequenza_mesi),
+      pagamento_automatico: costoForm.pagamento_automatico,
     });
     setEditCostoDialogOpen(false);
-    setCostoForm({ id: "", voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "", frequenza_mesi: "1" });
+    setCostoForm({ id: "", voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "", frequenza_mesi: "1", pagamento_automatico: false });
   };
 
   const handleMovimentoSubmit = async (e: React.FormEvent) => {
@@ -181,6 +185,7 @@ export default function Movimenti() {
       categoria: costo.categoria,
       note: costo.note || "",
       frequenza_mesi: String(costo.frequenza_mesi || 1),
+      pagamento_automatico: costo.pagamento_automatico || false,
     });
     setEditCostoDialogOpen(true);
   };
@@ -686,6 +691,16 @@ export default function Movimenti() {
                           onChange={(e) => setCostoForm({ ...costoForm, note: e.target.value })}
                         />
                       </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="pagamento_automatico"
+                          checked={costoForm.pagamento_automatico}
+                          onCheckedChange={(checked) => setCostoForm({ ...costoForm, pagamento_automatico: checked === true })}
+                        />
+                        <Label htmlFor="pagamento_automatico" className="text-sm font-normal cursor-pointer">
+                          Pagamento automatico (es. addebito diretto, RID)
+                        </Label>
+                      </div>
                       <div className="flex justify-end gap-2">
                         <Button type="button" variant="secondary" onClick={() => setCostoDialogOpen(false)}>
                           Annulla
@@ -705,7 +720,15 @@ export default function Movimenti() {
                   {costiFissi.filter(c => c.attivo).map((costo) => (
                     <div key={costo.id} className="flex flex-col sm:flex-row sm:items-center justify-between border border-border p-3 gap-2">
                       <div>
-                        <p className="font-medium text-sm">{costo.voce}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{costo.voce}</p>
+                          {(costo as any).pagamento_automatico && (
+                            <Badge variant="secondary" className="text-xs">
+                              <CreditCard className="h-3 w-3 mr-1" />
+                              auto
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {formatCurrency(costo.importo_mensile)} · {getFrequenzaLabel((costo as any).frequenza_mesi || 1)} · scadenza giorno {costo.giorno_scadenza} · {costo.categoria}
                         </p>
@@ -817,6 +840,16 @@ export default function Movimenti() {
                     value={costoForm.note}
                     onChange={(e) => setCostoForm({ ...costoForm, note: e.target.value })}
                   />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit_pagamento_automatico"
+                    checked={costoForm.pagamento_automatico}
+                    onCheckedChange={(checked) => setCostoForm({ ...costoForm, pagamento_automatico: checked === true })}
+                  />
+                  <Label htmlFor="edit_pagamento_automatico" className="text-sm font-normal cursor-pointer">
+                    Pagamento automatico (es. addebito diretto, RID)
+                  </Label>
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="secondary" onClick={() => setEditCostoDialogOpen(false)}>

@@ -78,6 +78,7 @@ export type Database = {
           id: string
           importo_mensile: number
           note: string | null
+          pagamento_automatico: boolean
           updated_at: string
           voce: string
         }
@@ -90,6 +91,7 @@ export type Database = {
           id?: string
           importo_mensile: number
           note?: string | null
+          pagamento_automatico?: boolean
           updated_at?: string
           voce: string
         }
@@ -102,6 +104,7 @@ export type Database = {
           id?: string
           importo_mensile?: number
           note?: string | null
+          pagamento_automatico?: boolean
           updated_at?: string
           voce?: string
         }

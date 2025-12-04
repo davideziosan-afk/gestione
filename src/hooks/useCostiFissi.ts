@@ -276,6 +276,7 @@ export function useCreateMovimentoUnaTantum() {
       dilazionato?: boolean;
       numero_rate?: number;
       giorno_rata?: number;
+      addebito_automatico?: boolean;
     }) => {
       // We'll use movimenti_fissi with tipo_uscita = 'una_tantum' and a dummy costo_fisso_id
       // First create a temporary costo_fisso entry
@@ -295,6 +296,7 @@ export function useCreateMovimentoUnaTantum() {
       if (costoError) throw costoError;
       
       const isPagato = movimento.stato === "Pagato";
+      const addebitoAutomatico = movimento.addebito_automatico || false;
       
       // Handle installment payments
       if (movimento.dilazionato && movimento.numero_rate && movimento.numero_rate > 1) {
@@ -311,17 +313,20 @@ export function useCreateMovimentoUnaTantum() {
           const dataPrevistaStr = dataPrevista.toISOString().split('T')[0];
           const isFirstRata = i === 0;
           
+          // With addebito_automatico, mark all installments as Pagato with their scheduled date
+          const shouldBePagato = addebitoAutomatico || (isFirstRata && isPagato);
+          
           movimenti.push({
             costo_fisso_id: costoFisso.id,
             mese: dataPrevistaStr,
             data_prevista: dataPrevistaStr,
             importo: Math.round(importoRata * 100) / 100,
-            stato: (isFirstRata && isPagato) ? "Pagato" : "Previsto",
+            stato: shouldBePagato ? "Pagato" : "Previsto",
             categoria: movimento.categoria,
             note: `${movimento.descrizione} (rata ${i + 1}/${movimento.numero_rate})`,
             tipo_uscita: "una_tantum",
             progetto_id: movimento.progetto_id || null,
-            data_effettiva: (isFirstRata && isPagato) ? dataPrevistaStr : null,
+            data_effettiva: shouldBePagato ? dataPrevistaStr : null,
           });
         }
         

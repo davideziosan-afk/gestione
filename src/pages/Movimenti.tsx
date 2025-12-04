@@ -5,13 +5,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useFasiProgetto, useDeleteFase, useMarkAsIncassato, useMarkAsPagato as useMarkFaseAsPagato } from "@/hooks/useFasiProgetto";
-import { useMovimentiFissi, useCostiFissi, useCreateCostoFisso, useGenerateMovimentiFissi, useMarkMovimentoAsPagato, useDeleteCostoFisso, useDeleteMovimentoFisso, useCreateMovimentoUnaTantum } from "@/hooks/useCostiFissi";
+import { useFasiProgetto, useDeleteFase, useMarkAsIncassato, useMarkAsPagato as useMarkFaseAsPagato, useUpdateFase } from "@/hooks/useFasiProgetto";
+import { useMovimentiFissi, useCostiFissi, useCreateCostoFisso, useGenerateMovimentiFissi, useMarkMovimentoAsPagato, useDeleteCostoFisso, useDeleteMovimentoFisso, useCreateMovimentoUnaTantum, useUpdateMovimentoFisso, useUpdateCostoFisso } from "@/hooks/useCostiFissi";
 import { useProjects } from "@/hooks/useProjects";
 import { formatCurrency, formatDate } from "@/lib/dateUtils";
 import { Badge } from "@/components/ui/badge";
-import { Plus, CheckCircle2, RefreshCw, Trash2 } from "lucide-react";
+import { Plus, CheckCircle2, RefreshCw, Trash2, Pencil } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const FREQUENZE = [
+  { value: "1", label: "Mensile" },
+  { value: "2", label: "Bimestrale" },
+  { value: "3", label: "Trimestrale" },
+  { value: "6", label: "Semestrale" },
+  { value: "12", label: "Annuale" },
+];
 
 export default function Movimenti() {
   const { data: fasi } = useFasiProgetto();
@@ -19,6 +27,7 @@ export default function Movimenti() {
   const { data: costiFissi } = useCostiFissi();
   const { data: progetti } = useProjects();
   const createCostoFisso = useCreateCostoFisso();
+  const updateCostoFisso = useUpdateCostoFisso();
   const generateMovimenti = useGenerateMovimentiFissi();
   const markAsPagato = useMarkMovimentoAsPagato();
   const deleteCostoFisso = useDeleteCostoFisso();
@@ -27,6 +36,8 @@ export default function Movimenti() {
   const markFaseAsIncassato = useMarkAsIncassato();
   const markFaseAsPagato = useMarkFaseAsPagato();
   const createMovimentoUnaTantum = useCreateMovimentoUnaTantum();
+  const updateMovimentoFisso = useUpdateMovimentoFisso();
+  const updateFase = useUpdateFase();
 
   const [filters, setFilters] = useState({
     search: "",
@@ -37,13 +48,19 @@ export default function Movimenti() {
 
   const [costoDialogOpen, setCostoDialogOpen] = useState(false);
   const [movimentoDialogOpen, setMovimentoDialogOpen] = useState(false);
+  const [editMovimentoDialogOpen, setEditMovimentoDialogOpen] = useState(false);
+  const [editCostoDialogOpen, setEditCostoDialogOpen] = useState(false);
+  
   const [costoForm, setCostoForm] = useState({
+    id: "",
     voce: "",
     importo_mensile: "",
     giorno_scadenza: "1",
     categoria: "",
     note: "",
+    frequenza_mesi: "1",
   });
+  
   const [movimentoForm, setMovimentoForm] = useState({
     descrizione: "",
     importo: "",
@@ -53,6 +70,17 @@ export default function Movimenti() {
     progetto_id: "",
     stato: "Previsto",
   });
+
+  const [editingMovimento, setEditingMovimento] = useState<{
+    id: string;
+    tipo: 'fisso' | 'progetto';
+    importo: string;
+    data_prevista: string;
+    categoria: string;
+    note: string;
+    stato: string;
+    progetto_id: string;
+  } | null>(null);
 
   // Filter only active projects
   const progettiAttivi = progetti?.filter(p => p.stato === 'Attivo') || [];
@@ -65,9 +93,25 @@ export default function Movimenti() {
       giorno_scadenza: parseInt(costoForm.giorno_scadenza),
       categoria: costoForm.categoria,
       note: costoForm.note || null,
+      frequenza_mesi: parseInt(costoForm.frequenza_mesi),
     });
     setCostoDialogOpen(false);
-    setCostoForm({ voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "" });
+    setCostoForm({ id: "", voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "", frequenza_mesi: "1" });
+  };
+
+  const handleCostoUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateCostoFisso.mutateAsync({
+      id: costoForm.id,
+      voce: costoForm.voce,
+      importo_mensile: parseFloat(costoForm.importo_mensile),
+      giorno_scadenza: parseInt(costoForm.giorno_scadenza),
+      categoria: costoForm.categoria,
+      note: costoForm.note || null,
+      frequenza_mesi: parseInt(costoForm.frequenza_mesi),
+    });
+    setEditCostoDialogOpen(false);
+    setCostoForm({ id: "", voce: "", importo_mensile: "", giorno_scadenza: "1", categoria: "", note: "", frequenza_mesi: "1" });
   };
 
   const handleMovimentoSubmit = async (e: React.FormEvent) => {
@@ -83,6 +127,62 @@ export default function Movimenti() {
     });
     setMovimentoDialogOpen(false);
     setMovimentoForm({ descrizione: "", importo: "", data_prevista: "", categoria: "", note: "", progetto_id: "", stato: "Previsto" });
+  };
+
+  const handleEditMovimento = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMovimento) return;
+
+    if (editingMovimento.tipo === 'fisso') {
+      await updateMovimentoFisso.mutateAsync({
+        id: editingMovimento.id,
+        importo: parseFloat(editingMovimento.importo),
+        data_prevista: editingMovimento.data_prevista,
+        categoria: editingMovimento.categoria,
+        note: editingMovimento.note,
+        stato: editingMovimento.stato as "Previsto" | "Pagato" | "Fatturato" | "Incassato" | "Annullato",
+        progetto_id: editingMovimento.progetto_id || null,
+        data_effettiva: editingMovimento.stato === "Pagato" ? editingMovimento.data_prevista : null,
+      });
+    } else {
+      await updateFase.mutateAsync({
+        id: editingMovimento.id,
+        importo: parseFloat(editingMovimento.importo),
+        data_prevista: editingMovimento.data_prevista,
+        categoria: editingMovimento.categoria,
+        note: editingMovimento.note,
+        stato: editingMovimento.stato as any,
+      });
+    }
+    setEditMovimentoDialogOpen(false);
+    setEditingMovimento(null);
+  };
+
+  const openEditMovimento = (movimento: any) => {
+    setEditingMovimento({
+      id: movimento.id,
+      tipo: movimento.is_fisso ? 'fisso' : 'progetto',
+      importo: String(movimento.importo),
+      data_prevista: movimento.data_prevista,
+      categoria: movimento.categoria,
+      note: movimento.fase || movimento.note || "",
+      stato: movimento.stato,
+      progetto_id: movimento.progetto_id || "",
+    });
+    setEditMovimentoDialogOpen(true);
+  };
+
+  const openEditCosto = (costo: any) => {
+    setCostoForm({
+      id: costo.id,
+      voce: costo.voce,
+      importo_mensile: String(costo.importo_mensile),
+      giorno_scadenza: String(costo.giorno_scadenza),
+      categoria: costo.categoria,
+      note: costo.note || "",
+      frequenza_mesi: String(costo.frequenza_mesi || 1),
+    });
+    setEditCostoDialogOpen(true);
   };
 
   // Combine all movements
@@ -127,6 +227,10 @@ export default function Movimenti() {
       return true;
     })
     .sort((a, b) => new Date(b.data_prevista).getTime() - new Date(a.data_prevista).getTime());
+
+  const getFrequenzaLabel = (mesi: number) => {
+    return FREQUENZE.find(f => f.value === String(mesi))?.label || "Mensile";
+  };
 
   return (
     <div className="space-y-6">
@@ -240,6 +344,108 @@ export default function Movimenti() {
         </Dialog>
       </div>
 
+      {/* Edit Movement Dialog */}
+      <Dialog open={editMovimentoDialogOpen} onOpenChange={setEditMovimentoDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifica Movimento</DialogTitle>
+          </DialogHeader>
+          {editingMovimento && (
+            <form onSubmit={handleEditMovimento} className="space-y-4">
+              <div>
+                <Label>Descrizione</Label>
+                <Input
+                  value={editingMovimento.note}
+                  onChange={(e) => setEditingMovimento({ ...editingMovimento, note: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Importo (€)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editingMovimento.importo}
+                    onChange={(e) => setEditingMovimento({ ...editingMovimento, importo: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Data Prevista</Label>
+                  <Input
+                    type="date"
+                    value={editingMovimento.data_prevista}
+                    onChange={(e) => setEditingMovimento({ ...editingMovimento, data_prevista: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Categoria</Label>
+                <Input
+                  value={editingMovimento.categoria}
+                  onChange={(e) => setEditingMovimento({ ...editingMovimento, categoria: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label>Stato</Label>
+                <Select
+                  value={editingMovimento.stato}
+                  onValueChange={(value) => setEditingMovimento({ ...editingMovimento, stato: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Previsto">Previsto</SelectItem>
+                    {editingMovimento.tipo === 'fisso' ? (
+                      <SelectItem value="Pagato">Pagato</SelectItem>
+                    ) : (
+                      <>
+                        <SelectItem value="Fatturato">Fatturato</SelectItem>
+                        <SelectItem value="Incassato">Incassato</SelectItem>
+                        <SelectItem value="Pagato">Pagato</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              {editingMovimento.tipo === 'fisso' && (
+                <div>
+                  <Label>Progetto (opzionale)</Label>
+                  <Select
+                    value={editingMovimento.progetto_id || "none"}
+                    onValueChange={(value) => setEditingMovimento({ ...editingMovimento, progetto_id: value === "none" ? "" : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Nessun progetto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nessun progetto</SelectItem>
+                      {progetti?.map((progetto) => (
+                        <SelectItem key={progetto.id} value={progetto.id}>
+                          {progetto.codice} - {progetto.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="secondary" onClick={() => setEditMovimentoDialogOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" disabled={updateMovimentoFisso.isPending || updateFase.isPending}>
+                  Salva
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Tabs defaultValue="tutti">
         <TabsList className="mb-4 flex-wrap h-auto">
           <TabsTrigger value="tutti">tutti</TabsTrigger>
@@ -342,6 +548,14 @@ export default function Movimenti() {
                         </div>
                         <div className="flex items-center gap-2">
                           <p className="font-bold">{formatCurrency(movimento.importo)}</p>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openEditMovimento(movimento)}
+                            title="Modifica"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           {movimento.stato === 'Previsto' && (
                             <Button
                               size="sm"
@@ -393,7 +607,7 @@ export default function Movimenti() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-base">definizioni costi fissi</CardTitle>
-                  <CardDescription className="text-xs">costi ricorrenti mensili</CardDescription>
+                  <CardDescription className="text-xs">costi ricorrenti</CardDescription>
                 </div>
                 <Dialog open={costoDialogOpen} onOpenChange={setCostoDialogOpen}>
                   <DialogTrigger asChild>
@@ -418,7 +632,7 @@ export default function Movimenti() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>Importo Mensile (€)</Label>
+                          <Label>Importo (€)</Label>
                           <Input
                             type="number"
                             step="0.01"
@@ -438,6 +652,24 @@ export default function Movimenti() {
                             required
                           />
                         </div>
+                      </div>
+                      <div>
+                        <Label>Frequenza</Label>
+                        <Select
+                          value={costoForm.frequenza_mesi}
+                          onValueChange={(value) => setCostoForm({ ...costoForm, frequenza_mesi: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FREQUENZE.map((freq) => (
+                              <SelectItem key={freq.value} value={freq.value}>
+                                {freq.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label>Categoria</Label>
@@ -470,15 +702,23 @@ export default function Movimenti() {
                 <p className="text-sm text-muted-foreground">nessun costo fisso definito</p>
               ) : (
                 <div className="space-y-2">
-                  {costiFissi.map((costo) => (
+                  {costiFissi.filter(c => c.attivo).map((costo) => (
                     <div key={costo.id} className="flex flex-col sm:flex-row sm:items-center justify-between border border-border p-3 gap-2">
                       <div>
                         <p className="font-medium text-sm">{costo.voce}</p>
                         <p className="text-xs text-muted-foreground">
-                          {formatCurrency(costo.importo_mensile)}/mese · scadenza giorno {costo.giorno_scadenza} · {costo.categoria}
+                          {formatCurrency(costo.importo_mensile)} · {getFrequenzaLabel((costo as any).frequenza_mesi || 1)} · scadenza giorno {costo.giorno_scadenza} · {costo.categoria}
                         </p>
                       </div>
                       <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openEditCosto(costo)}
+                          title="Modifica"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
@@ -507,11 +747,94 @@ export default function Movimenti() {
             </CardContent>
           </Card>
 
+          {/* Edit Costo Fisso Dialog */}
+          <Dialog open={editCostoDialogOpen} onOpenChange={setEditCostoDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Modifica Costo Fisso</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCostoUpdate} className="space-y-4">
+                <div>
+                  <Label>Voce</Label>
+                  <Input
+                    value={costoForm.voce}
+                    onChange={(e) => setCostoForm({ ...costoForm, voce: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Importo (€)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={costoForm.importo_mensile}
+                      onChange={(e) => setCostoForm({ ...costoForm, importo_mensile: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Giorno Scadenza</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={costoForm.giorno_scadenza}
+                      onChange={(e) => setCostoForm({ ...costoForm, giorno_scadenza: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Frequenza</Label>
+                  <Select
+                    value={costoForm.frequenza_mesi}
+                    onValueChange={(value) => setCostoForm({ ...costoForm, frequenza_mesi: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FREQUENZE.map((freq) => (
+                        <SelectItem key={freq.value} value={freq.value}>
+                          {freq.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Categoria</Label>
+                  <Input
+                    value={costoForm.categoria}
+                    onChange={(e) => setCostoForm({ ...costoForm, categoria: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Note</Label>
+                  <Input
+                    value={costoForm.note}
+                    onChange={(e) => setCostoForm({ ...costoForm, note: e.target.value })}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="secondary" onClick={() => setEditCostoDialogOpen(false)}>
+                    Annulla
+                  </Button>
+                  <Button type="submit" disabled={updateCostoFisso.isPending}>
+                    Salva
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+
           {/* Generated Movements */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">movimenti generati</CardTitle>
-              <CardDescription className="text-xs">istanze mensili dei costi fissi</CardDescription>
+              <CardDescription className="text-xs">istanze dei costi fissi</CardDescription>
             </CardHeader>
             <CardContent>
               {!movimentiFissi || movimentiFissi.length === 0 ? (
@@ -535,6 +858,14 @@ export default function Movimenti() {
                       </div>
                       <div className="flex items-center gap-2">
                         <p className="font-bold">{formatCurrency(mov.importo)}</p>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openEditMovimento({ ...mov, is_fisso: true, fase: mov.note })}
+                          title="Modifica"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         {mov.stato === 'Previsto' && (
                           <Button
                             size="sm"

@@ -73,6 +73,7 @@ export type Database = {
           attivo: boolean
           categoria: string
           created_at: string
+          frequenza_mesi: number
           giorno_scadenza: number
           id: string
           importo_mensile: number
@@ -84,6 +85,7 @@ export type Database = {
           attivo?: boolean
           categoria: string
           created_at?: string
+          frequenza_mesi?: number
           giorno_scadenza: number
           id?: string
           importo_mensile: number
@@ -95,6 +97,7 @@ export type Database = {
           attivo?: boolean
           categoria?: string
           created_at?: string
+          frequenza_mesi?: number
           giorno_scadenza?: number
           id?: string
           importo_mensile?: number

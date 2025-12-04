@@ -37,10 +37,20 @@ export function useCreateCostoFisso() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (costo: any) => {
+    mutationFn: async (costo: {
+      voce: string;
+      importo_mensile: number;
+      giorno_scadenza: number;
+      categoria: string;
+      note?: string | null;
+      frequenza_mesi?: number;
+    }) => {
       const { data, error } = await supabase
         .from("costi_fissi")
-        .insert(costo)
+        .insert({
+          ...costo,
+          frequenza_mesi: costo.frequenza_mesi || 1,
+        })
         .select()
         .single();
       
@@ -50,6 +60,39 @@ export function useCreateCostoFisso() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["costi_fissi"] });
       toast.success("Costo fisso creato con successo");
+    },
+    onError: (error: any) => {
+      toast.error("Errore: " + error.message);
+    },
+  });
+}
+
+export function useUpdateCostoFisso() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...costo }: {
+      id: string;
+      voce?: string;
+      importo_mensile?: number;
+      giorno_scadenza?: number;
+      categoria?: string;
+      note?: string | null;
+      frequenza_mesi?: number;
+    }) => {
+      const { data, error } = await supabase
+        .from("costi_fissi")
+        .update(costo)
+        .eq("id", id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["costi_fissi"] });
+      toast.success("Costo fisso aggiornato");
     },
     onError: (error: any) => {
       toast.error("Errore: " + error.message);
@@ -71,11 +114,12 @@ export function useGenerateMovimentiFissi() {
       
       if (costoError) throw costoError;
       
-      // Generate 12 months of movimenti
+      const frequenza = (costo as any).frequenza_mesi || 1;
       const movimenti = [];
       const today = new Date();
       
-      for (let i = 0; i < 12; i++) {
+      // Generate 12 months worth of movements based on frequency
+      for (let i = 0; i < 12; i += frequenza) {
         const mese = startOfMonth(addMonths(today, i));
         const dataPrevista = new Date(mese);
         dataPrevista.setDate(costo.giorno_scadenza);
@@ -101,7 +145,7 @@ export function useGenerateMovimentiFissi() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["movimenti_fissi"] });
-      toast.success("Generati 12 mesi di movimenti fissi");
+      toast.success("Movimenti generati con successo");
     },
     onError: (error: any) => {
       toast.error("Errore: " + error.message);
@@ -113,7 +157,16 @@ export function useUpdateMovimentoFisso() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ id, ...movimento }: any) => {
+    mutationFn: async ({ id, ...movimento }: {
+      id: string;
+      importo?: number;
+      data_prevista?: string;
+      categoria?: string;
+      note?: string;
+      stato?: "Previsto" | "Pagato" | "Fatturato" | "Incassato" | "Annullato";
+      data_effettiva?: string | null;
+      progetto_id?: string | null;
+    }) => {
       const { data, error } = await supabase
         .from("movimenti_fissi")
         .update(movimento)
@@ -127,6 +180,9 @@ export function useUpdateMovimentoFisso() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["movimenti_fissi"] });
       toast.success("Movimento aggiornato");
+    },
+    onError: (error: any) => {
+      toast.error("Errore: " + error.message);
     },
   });
 }

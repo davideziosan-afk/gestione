@@ -57,11 +57,44 @@ export function useCreateCostoFisso() {
         .single();
       
       if (error) throw error;
+      
+      // Automatically generate 12 months of movements
+      const frequenza = costo.frequenza_mesi || 1;
+      const pagamentoAutomatico = costo.pagamento_automatico || false;
+      const movimenti = [];
+      const today = new Date();
+      
+      for (let i = 0; i < 12; i += frequenza) {
+        const mese = startOfMonth(addMonths(today, i));
+        const dataPrevista = new Date(mese);
+        dataPrevista.setDate(costo.giorno_scadenza);
+        
+        const dataPrevistaStr = dataPrevista.toISOString().split('T')[0];
+        
+        movimenti.push({
+          costo_fisso_id: data.id,
+          mese: mese.toISOString().split('T')[0],
+          data_prevista: dataPrevistaStr,
+          importo: costo.importo_mensile,
+          stato: pagamentoAutomatico ? "Pagato" : "Previsto",
+          data_effettiva: pagamentoAutomatico ? dataPrevistaStr : null,
+          categoria: costo.categoria,
+          note: costo.voce,
+        });
+      }
+      
+      const { error: movError } = await supabase
+        .from("movimenti_fissi")
+        .insert(movimenti);
+      
+      if (movError) throw movError;
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["costi_fissi"] });
-      toast.success("Costo fisso creato con successo");
+      queryClient.invalidateQueries({ queryKey: ["movimenti_fissi"] });
+      toast.success("Costo fisso creato e movimenti generati");
     },
     onError: (error: any) => {
       toast.error("Errore: " + error.message);

@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useFasiProgetto, useDeleteFase, useMarkAsIncassato, useMarkAsPagato as useMarkFaseAsPagato, useUpdateFase } from "@/hooks/useFasiProgetto";
-import { useMovimentiFissi, useCostiFissi, useCreateCostoFisso, useGenerateMovimentiFissi, useMarkMovimentoAsPagato, useDeleteCostoFisso, useDeleteMovimentoFisso, useCreateMovimentoUnaTantum, useUpdateMovimentoFisso, useUpdateCostoFisso } from "@/hooks/useCostiFissi";
+import { useMovimentiFissi, useCostiFissi, useCreateCostoFisso, useMarkMovimentoAsPagato, useDeleteCostoFisso, useDeleteMovimentoFisso, useCreateMovimentoUnaTantum, useUpdateMovimentoFisso, useUpdateCostoFisso } from "@/hooks/useCostiFissi";
 import { useProjects } from "@/hooks/useProjects";
 import { formatCurrency, formatDate } from "@/lib/dateUtils";
 import { Badge } from "@/components/ui/badge";
-import { Plus, CheckCircle2, RefreshCw, Trash2, Pencil, CreditCard } from "lucide-react";
+import { Plus, CheckCircle2, Trash2, Pencil, CreditCard } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -29,7 +29,7 @@ export default function Movimenti() {
   const { data: progetti } = useProjects();
   const createCostoFisso = useCreateCostoFisso();
   const updateCostoFisso = useUpdateCostoFisso();
-  const generateMovimenti = useGenerateMovimentiFissi();
+  
   const markAsPagato = useMarkMovimentoAsPagato();
   const deleteCostoFisso = useDeleteCostoFisso();
   const deleteMovimentoFisso = useDeleteMovimentoFisso();
@@ -741,15 +741,6 @@ export default function Movimenti() {
                           title="Modifica"
                         >
                           <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => generateMovimenti.mutate(costo.id)}
-                          disabled={generateMovimenti.isPending}
-                        >
-                          <RefreshCw className="h-3 w-3 mr-1" />
-                          genera 12 mesi
                         </Button>
                         <Button
                           size="sm"
